@@ -154,7 +154,7 @@ namespace MISP
         public static String ParsePrefix(ParseState state)
         {
             var next = state.Next();
-            if (next == '*' || next == '^' || next == '$' || next == '#' || next == ':')
+            if (next == '*' || next == '^' || next == '$' || next == '.' || next == ':')
             {
                 state.Advance();
                 return new String(next, 1);
@@ -185,7 +185,7 @@ namespace MISP
             }
             else
             {
-                if (state.Next() == ' ' && !String.IsNullOrEmpty(prefix))
+                if ((state.Next() == ' ' || state.Next() == ')' || state.Next() == ']') && !String.IsNullOrEmpty(prefix))
                 {
                     //The prefix is a token.
                     result = new GenericScriptObject("@type", "@token", "@start", state.start - 1, "@source", state);

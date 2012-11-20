@@ -250,7 +250,7 @@ namespace MISP
             if (node.gsp("@prefix") == ":" && !ignoreStar)
                 result = Evaluate(context, result);
             if (context.evaluationState == EvaluationState.UnwindingError) return null;
-            if (node.gsp("@prefix") == "#") result = LookupToken(context, ScriptObject.AsString(result));
+            if (node.gsp("@prefix") == ".") result = LookupToken(context, ScriptObject.AsString(result));
             return result;
         }
 

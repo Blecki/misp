@@ -17,25 +17,25 @@ namespace MISP
                     return (dynamic)arguments[0] + (dynamic)arguments[1];
                 }, "A", "B");
 
-            AddFunction("-", "Add values", (context, arguments) =>
+            AddFunction("-", "Subtract values", (context, arguments) =>
             {
                 if (arguments[0] == null || arguments[1] == null) return null;
                 return (dynamic)arguments[0] - (dynamic)arguments[1];
             }, "A", "B");
 
-            AddFunction("*", "Add values", (context, arguments) =>
+            AddFunction("*", "Multiply values", (context, arguments) =>
             {
                 if (arguments[0] == null || arguments[1] == null) return null;
                 return (dynamic)arguments[0] * (dynamic)arguments[1];
             }, "A", "B");
 
-            AddFunction("/", "Add values", (context, arguments) =>
+            AddFunction("/", "Divide values", (context, arguments) =>
             {
                 if (arguments[0] == null || arguments[1] == null) return null;
                 return (dynamic)arguments[0] / (dynamic)arguments[1];
             }, "A", "B");
 
-            AddFunction("%", "Add values", (context, arguments) =>
+            AddFunction("%", "Modulus values", (context, arguments) =>
             {
                 if (arguments[0] == null || arguments[1] == null) return null;
                 return (dynamic)arguments[0] % (dynamic)arguments[1];

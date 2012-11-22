@@ -182,13 +182,16 @@ namespace MISP
             else if ("-0123456789".Contains(state.Next()))
             {
                 result = ParseNumber(state);
+                if (result["@token"].ToString() == "-") //A lone - sign is not a valid number. Interpret it as a token.
+                    result["@type"] = "token";
             }
             else
             {
-                if ((state.Next() == ' ' || state.Next() == ')' || state.Next() == ']') && !String.IsNullOrEmpty(prefix))
+                if (" \t\r\n:.)]".Contains(state.Next())
+                    && !String.IsNullOrEmpty(prefix))
                 {
                     //The prefix is a token.
-                    result = new GenericScriptObject("@type", "@token", "@start", state.start - 1, "@source", state);
+                    result = new GenericScriptObject("@type", "token", "@start", state.start - 1, "@source", state);
                     result["@end"] = state.start;
                     result["@token"] = prefix;
                     prefix = "";

@@ -34,6 +34,8 @@ namespace MISP
 
             if (Function.IsFunction(obj))
             {
+                //System function?
+                if (Function.IsSystemFunction(obj)) return;
                 //Lambda function?
                 if (globalFunctions.Contains(obj)) return;
                 if (AddRef(obj, lambdas))
@@ -82,7 +84,8 @@ namespace MISP
             if (value == null) to.Write("null");
             else if (value is ScriptObject)
             {
-                if (globalFunctions.Contains(value)) to.Write((value as ScriptObject).gsp("name"));
+                if (Function.IsSystemFunction(value as ScriptObject) || 
+                    globalFunctions.Contains(value)) to.Write((value as ScriptObject).gsp("@name"));
                 else
                 {
                     var index = IndexIn(value as ScriptObject, objects);
@@ -155,7 +158,7 @@ namespace MISP
 
         public void EmitFunction(ScriptObject func, string type, System.IO.TextWriter to)
         {
-            to.Write("(" + type + " \"" + func.gsp("name") + "\" (");
+            to.Write("(" + type + " \"" + func.gsp("@name") + "\" (");
             var arguments = func["@arguments"] as List<ArgumentInfo>;
             foreach (var arg in arguments)
             {
@@ -166,7 +169,7 @@ namespace MISP
             }
             to.Write(") ");
             Engine.SerializeCode(to, func["@function-body"] as ScriptObject);
-            to.Write(" " + func.gsp("help") + ")\n");
+            to.Write(" " + func.gsp("@help") + ")\n");
         }
 
         public void SerializeEnvironment(System.IO.TextWriter to, ScriptObject @this)
@@ -184,7 +187,7 @@ namespace MISP
 
             //Filter objects into objects and lambda list
             foreach (var func in globalFunctions)
-                EnumerateObject(func["declaration-scope"] as ScriptObject, globalFunctions, objects, lambdas);
+                EnumerateObject(func["@declaration-scope"] as ScriptObject, globalFunctions, objects, lambdas);
             EnumerateObject(@this, globalFunctions, objects, lambdas);
 
             //Filter out objects with just a single reference
@@ -209,15 +212,16 @@ namespace MISP
             //Set function declaration scopes.
             foreach (var func in globalFunctions)
             {
-                to.WriteLine("(set " + func.gsp("name") + " \"declaration-scope\" ");
-                EmitObjectProperty(to, func["declaration-scope"], globalFunctions, objects, lambdas);
+                to.WriteLine("(set " + func.gsp("@name") + " \"@declaration-scope\" ");
+                EmitObjectProperty(to, func["@declaration-scope"], globalFunctions, objects, lambdas);
                 to.WriteLine(")\n");
             }
 
-            foreach (var func in lambdas)
+            for (int i = 0; i < lambdas.Count; ++i)
             {
-                to.WriteLine("(set " + func.obj.gsp("name") + " \"declaration-scope\" ");
-                EmitObjectProperty(to, func.obj["declaration-scope"], globalFunctions, objects, lambdas);
+                var func = lambdas[i];
+                to.WriteLine("(set (index lambdas " + i + ") \"@declaration-scope\" ");
+                EmitObjectProperty(to, func.obj["@declaration-scope"], globalFunctions, objects, lambdas);
                 to.WriteLine(")\n");
             }
             //Emit remaining objects

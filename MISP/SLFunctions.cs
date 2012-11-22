@@ -52,8 +52,8 @@ namespace MISP
                 (context, arguments) =>
                 {
                     var r = defunImple(context, arguments, false);
-                    if (context.evaluationState == EvaluationState.Normal && !String.IsNullOrEmpty(r.gsp("name")))
-                        functions.Upsert(r.gsp("name"), r);
+                    if (context.evaluationState == EvaluationState.Normal && !String.IsNullOrEmpty(r.gsp("@name")))
+                        functions.Upsert(r.gsp("@name"), r);
                     return r;
                 }, "string name", "list arguments", "code code", "?comment");
 
@@ -67,7 +67,7 @@ namespace MISP
                 (context, arguments) =>
                 {
                     var r = defunImple(context, arguments, true);
-                    if (context.evaluationState == EvaluationState.Normal) context.Scope.PushVariable(r.gsp("name"), r);
+                    if (context.evaluationState == EvaluationState.Normal) context.Scope.PushVariable(r.gsp("@name"), r);
                     return r;
                 }, "string name", "list arguments", "code code", "?comment");
         }

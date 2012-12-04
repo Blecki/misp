@@ -88,4 +88,27 @@ namespace MISP
 
        
     }
+
+    internal class _Type
+    {
+        internal ScriptObject mutator;
+        internal ScriptObject createDefault;
+        internal ScriptObject declarationFunc;
+    }
+
+    public class ArgumentTypes
+    {
+        private Dictionary<String, _Type> mutators;
+        public void AddType(String name, ScriptObject mutator, ScriptObject createDefault)
+        {
+            mutators.Upsert(name, new _Type { mutator = mutator, createDefault = createDefault });
+        }
+
+        public ScriptObject GetTypeDescriptor(String typename)
+        {
+            return new GenericScriptObject("@type", typename, 
+                "@mutator", mutators[typename].mutator, 
+                "@default", mutators[typename].createDefault);
+        }
+    }
 }

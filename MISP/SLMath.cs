@@ -43,7 +43,7 @@ namespace MISP
 
 
             functions.Add("random", Function.MakeSystemFunction("random",
-                ArgumentInfo.ParseArguments(this, "integer A", "integer B"),
+                Arguments.ParseArguments(this, "integer A", "integer B"),
                 "A B : return a random value in range (A,B).",
                 (context, arguments) =>
                 {

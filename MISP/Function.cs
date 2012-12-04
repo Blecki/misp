@@ -9,7 +9,7 @@ namespace MISP
     {
         public static ScriptObject MakeSystemFunction(
             String name, 
-            List<ArgumentInfo> arguments,
+            ScriptList arguments,
             String help,
             Func<Context, ScriptList, Object> func)
         {
@@ -22,7 +22,7 @@ namespace MISP
 
 public static ScriptObject MakeFunction(
             String name, 
-            List<ArgumentInfo> arguments,
+            ScriptList arguments,
             String help,
             ScriptObject body,
             ScriptObject declarationScope)
@@ -47,15 +47,15 @@ public static ScriptObject MakeFunction(
             return obj["@function-body"] is Func<Context, ScriptList, Object>;
         }
 
-        public static ArgumentInfo GetArgumentInfo(ScriptObject func, Context context, int index)
+        public static ScriptObject GetArgumentInfo(ScriptObject func, Context context, int index)
         {
-            var arguments = func["@arguments"] as List<ArgumentInfo>;
+            var arguments = func["@arguments"] as ScriptList;
             if (arguments == null) return null;
 
             if (index >= arguments.Count)
             {
-                if (arguments.Count > 0 && (arguments[arguments.Count - 1] as ArgumentInfo).repeat)
-                    return arguments[arguments.Count - 1] as ArgumentInfo;
+                if (arguments.Count > 0 && (arguments[arguments.Count - 1] as ScriptObject)["@repeat"] != null)
+                    return arguments[arguments.Count - 1] as ScriptObject;
                 else
                 {
                     context.RaiseNewError("Argument out of bounds", null);
@@ -63,13 +63,13 @@ public static ScriptObject MakeFunction(
                 }
             }
             else
-                return arguments[index] as ArgumentInfo;
+                return arguments[index] as ScriptObject;
         }
 
         public static Object Invoke(ScriptObject func, Engine engine, Context context, ScriptList arguments)
         {
             var name = func.gsp("@name");
-            var argumentInfo = func["@arguments"] as List<ArgumentInfo>;
+            var argumentInfo = func["@arguments"] as ScriptList;
 
             if (context.trace != null)
             {
@@ -88,14 +88,14 @@ public static ScriptObject MakeFunction(
                 int argumentIndex = 0;
                 for (int i = 0; i < argumentInfo.Count; ++i)
                 {
-                    var info = argumentInfo[i];
+                    var info = argumentInfo[i] as ScriptObject;
 
-                    if (info.repeat)
+                    if (info["@repeat"] != null)
                     {
                         var list = new ScriptList();
                         while (argumentIndex < arguments.Count) //Handy side effect: If no argument is passed for an optional repeat
                         {                                       //argument, it will get an empty list.
-                            list.Add(info.type.ProcessArgument(context, arguments[argumentIndex]));
+                            list.Add((info["@type"] as Type).ProcessArgument(context, arguments[argumentIndex]));
                             if (context.evaluationState == EvaluationState.UnwindingError) return null;
                             ++argumentIndex;
                         }
@@ -105,11 +105,11 @@ public static ScriptObject MakeFunction(
                     {
                         if (argumentIndex < arguments.Count)
                         {
-                            newArguments.Add(info.type.ProcessArgument(context, arguments[argumentIndex]));
+                            newArguments.Add((info["@type"] as Type).ProcessArgument(context, arguments[argumentIndex]));
                             if (context.evaluationState == EvaluationState.UnwindingError) return null;
                         }
-                        else if (info.optional)
-                            newArguments.Add(info.type.CreateDefault());
+                        else if (info["@optional"] != null)
+                            newArguments.Add((info["@type"] as Type).CreateDefault());
                         else
                         {
                             context.RaiseNewError("Not enough arguments to " + name, context.currentNode);
@@ -141,12 +141,12 @@ public static ScriptObject MakeFunction(
                 context.PushScope(func["@declaration-scope"] as Scope);
 
                 for (int i = 0; i < argumentInfo.Count; ++i)
-                    context.Scope.PushVariable(argumentInfo[i].name, newArguments[i]);
+                    context.Scope.PushVariable((argumentInfo[i] as ScriptObject).gsp("@name"), newArguments[i]);
 
                 r = engine.Evaluate(context, func["@function-body"], true);
 
                 for (int i = 0; i < argumentInfo.Count; ++i)
-                    context.Scope.PopVariable(argumentInfo[i].name);
+                    context.Scope.PopVariable((argumentInfo[i] as ScriptObject).gsp("@name"));
 
                 context.PopScope();
             }

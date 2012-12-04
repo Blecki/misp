@@ -9,11 +9,13 @@ namespace MISP
     {
         private void SetupStandardLibrary()
         {
+            
             types.Add("STRING", new TypeString());
             types.Add("INTEGER", new TypePrimitive(typeof(int), true));
             types.Add("LIST", new TypeList());
             types.Add("OBJECT", new TypePrimitive(typeof(ScriptObject), false));
             types.Add("CODE", new TypePrimitive(typeof(ScriptObject), false));
+            types.Add("IDENTIFIER", new TypeString());
             types.Add("FUNCTION", new TypePrimitive(typeof(ScriptObject), false));
             types.Add("ANYTHING", Type.Anything);
             types.Add("FLOAT", new TypePrimitive(typeof(float), true));
@@ -34,8 +36,8 @@ namespace MISP
                     return null;
                 }, "string assembly", "string module");
 
-            functions.Add("eval", Function.MakeSystemFunction("eval", 
-                ArgumentInfo.ParseArguments(this, "code code"),
+            functions.Add("eval", Function.MakeSystemFunction("eval",
+                Arguments.ParseArguments(this, "code code"),
                 "thisobject code : Execute code.", (context, arguments) =>
                 {
                     if (arguments[0] is ScriptObject)
@@ -45,7 +47,7 @@ namespace MISP
                 }));
 
             functions.Add("lastarg", Function.MakeSystemFunction("lastarg",
-                ArgumentInfo.ParseArguments(this, "+children"),
+                Arguments.ParseArguments(this, "+children"),
                 "<n> : Returns the last argument.",
                 (context, arguments) =>
                 {
@@ -54,13 +56,13 @@ namespace MISP
                 }));
 
             functions.Add("nop", Function.MakeSystemFunction("nop",
-                ArgumentInfo.ParseArguments(this, "?+value"),
+                Arguments.ParseArguments(this, "?+value"),
                 "<n> : Returns null.",
                 (context, arguments) => { return null; }));
 
 
             functions.Add("coalesce", Function.MakeSystemFunction("coalesce",
-                ArgumentInfo.ParseArguments(this, "value", "default"),
+                Arguments.ParseArguments(this, "value", "default"),
                 "A B : B if A is null, A otherwise.",
                 (context, arguments) =>
                 {
@@ -69,7 +71,7 @@ namespace MISP
                 }));
 
             functions.Add("raise-error", Function.MakeSystemFunction("raise-error",
-                ArgumentInfo.ParseArguments(this, "string msg"),
+                Arguments.ParseArguments(this, "string msg"),
                 "",
                 (context, arguments) =>
                 {
@@ -78,7 +80,7 @@ namespace MISP
                 }));
 
             functions.Add("catch-error", Function.MakeSystemFunction("catch-error",
-                ArgumentInfo.ParseArguments(this, "code good", "code bad"),
+                Arguments.ParseArguments(this, "code good", "code bad"),
                 "",
                 (context, arguments) =>
                 {

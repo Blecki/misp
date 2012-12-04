@@ -10,7 +10,7 @@ namespace MISP
         private void SetupObjectFunctions()
         {
             functions.Add("members", Function.MakeSystemFunction("members",
-                ArgumentInfo.ParseArguments(this, "object object"),
+                Arguments.ParseArguments(this, "object object"),
                 "object : List of names of object members.", (context, arguments) =>
                 {
                     var obj = ArgumentType<ScriptObject>(arguments[0]);
@@ -18,7 +18,7 @@ namespace MISP
                 }));
 
             functions.Add("record", Function.MakeSystemFunction("record",
-                ArgumentInfo.ParseArguments(this, "list +?pairs"),
+                Arguments.ParseArguments(this, "list +?pairs"),
                 "<List of key-value pairs> : Returns a new generic script object.",
                 (context, arguments) =>
                 {
@@ -33,7 +33,7 @@ namespace MISP
                 }));
 
             functions.Add("clone", Function.MakeSystemFunction("clone",
-                ArgumentInfo.ParseArguments(this, "object record", "list +?pairs"),
+                Arguments.ParseArguments(this, "object record", "list +?pairs"),
                 "record <List of key-value pairs> : Returns a new generic script object cloned from [record]",
                 (context, arguments) =>
                 {
@@ -49,7 +49,7 @@ namespace MISP
                 }));
 
             functions.Add("set", Function.MakeSystemFunction("set",
-                ArgumentInfo.ParseArguments(this, "object object", "string property", "value"),
+                Arguments.ParseArguments(this, "object object", "string property", "value"),
                 "object property value : Set the member of an object.", (context, arguments) =>
                 {
                     try
@@ -66,7 +66,7 @@ namespace MISP
                 }));
 
             functions.Add("multi-set", Function.MakeSystemFunction("multi-set",
-                ArgumentInfo.ParseArguments(this, "object object", "list properties"),
+                Arguments.ParseArguments(this, "object object", "list properties"),
                 "object properties: Set multiple members of an object.",
                 (context, arguments) =>
                 {
@@ -82,7 +82,7 @@ namespace MISP
                 }));
 
             functions.Add("delete", Function.MakeSystemFunction("delete",
-                ArgumentInfo.ParseArguments(this, "object object", "string property"),
+                Arguments.ParseArguments(this, "object object", "string property"),
                 "object property : Deletes a property from an object.",
                 (context, arguments) =>
                 {

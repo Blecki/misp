@@ -10,7 +10,7 @@ namespace MISP
         private void SetupLoopFunctions()
         {
             functions.Add("map", Function.MakeSystemFunction("map",
-                ArgumentInfo.ParseArguments(this, "string variable_name", "list in", "code code"), 
+                Arguments.ParseArguments(this, "string variable_name", "list in", "code code"), 
                 "variable_name list code : Transform one list into another",
                 (context, arguments) =>
                 {
@@ -29,7 +29,7 @@ namespace MISP
                 }));
 
             functions.Add("mapi", Function.MakeSystemFunction("mapi",
-                ArgumentInfo.ParseArguments(this, "string variable_name", "list in", "code code"),
+                Arguments.ParseArguments(this, "string variable_name", "list in", "code code"),
                 "variable_name list code : Like map, except variable_name will hold the index not the value.",
                 (context, arguments) =>
                 {
@@ -48,7 +48,7 @@ namespace MISP
                 }));
 
             functions.Add("mapex", Function.MakeSystemFunction("mapex",
-                ArgumentInfo.ParseArguments(this, "string variable_name", "start", "code code", "code next"), 
+                Arguments.ParseArguments(this, "string variable_name", "start", "code code", "code next"), 
                 "variable_name start code next : Like map, but the next element is the result of 'next'. Stops when next = null.",
                 (context, arguments) =>
                 {
@@ -71,7 +71,7 @@ namespace MISP
                 }));
 
             functions.Add("for", Function.MakeSystemFunction("for",
-                ArgumentInfo.ParseArguments(this, "string variable_name", "list in", "code code"), 
+                Arguments.ParseArguments(this, "string variable_name", "list in", "code code"), 
                 "variable_name list code : Execute code for each item in list. Returns result of last run of code.",
                 (context, arguments) =>
                 {
@@ -92,7 +92,7 @@ namespace MISP
                 }));
 
             functions.Add("while", Function.MakeSystemFunction("while",
-                ArgumentInfo.ParseArguments(this, "code condition", "code code"),
+                Arguments.ParseArguments(this, "code condition", "code code"),
                 "condition code : Repeat code while condition evaluates to true.",
                 (context, arguments) =>
                 {
@@ -105,7 +105,7 @@ namespace MISP
                 }));
 
             functions.Add("repeat", Function.MakeSystemFunction("repeat",
-                ArgumentInfo.ParseArguments(this, "integer count", "code code"),
+                Arguments.ParseArguments(this, "integer count", "code code"),
                 "count code: Repeat code count times. If you're looking for a indexed for loop, try mapex.",
                 (context, arguments) =>
                 {

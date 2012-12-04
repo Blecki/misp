@@ -35,7 +35,7 @@ namespace MISP
                 }, "string variable_name", "list in", "code code");
 
             functions.Add("where", Function.MakeSystemFunction("where",
-    ArgumentInfo.ParseArguments(this, "string variable_name", "list in", "code code"),
+    Arguments.ParseArguments(this, "string variable_name", "list in", "code code"),
     "variable_name list code : Returns new list containing only the items in list for which code evaluated to true.",
     (context, arguments) =>
     {
@@ -54,7 +54,7 @@ namespace MISP
     }));
 
             functions.Add("cat", Function.MakeSystemFunction("cat",
-                ArgumentInfo.ParseArguments(this, "?+items"),
+                Arguments.ParseArguments(this, "?+items"),
                 "<n> : Combine N lists into one",
                 (context, arguments) =>
                 {
@@ -68,7 +68,7 @@ namespace MISP
                 }));
 
             functions.Add("last", Function.MakeSystemFunction("last",
-                ArgumentInfo.ParseArguments(this, "list list"),
+                Arguments.ParseArguments(this, "list list"),
                 "list : Returns last item in list.",
                 (context, arguments) =>
                 {
@@ -78,7 +78,7 @@ namespace MISP
                 }));
 
             functions.Add("first", Function.MakeSystemFunction("first",
-                ArgumentInfo.ParseArguments(this, "list list"),
+                Arguments.ParseArguments(this, "list list"),
                 "list : Returns first item in list.",
                 (context, arguments) =>
                 {
@@ -88,7 +88,7 @@ namespace MISP
                 }));
 
             functions.Add("index", Function.MakeSystemFunction("index",
-                ArgumentInfo.ParseArguments(this, "list list", "integer n"),
+                Arguments.ParseArguments(this, "list list", "integer n"),
                 "list n : Returns nth element in list.",
                 (context, arguments) =>
                 {
@@ -100,7 +100,7 @@ namespace MISP
                 }));
 
             functions.Add("sub-list", Function.MakeSystemFunction("sub-list",
-                ArgumentInfo.ParseArguments(this, "list list", "integer start", "integer ?length"),
+                Arguments.ParseArguments(this, "list list", "integer start", "integer ?length"),
                 "list start length: Returns a elements in list between start and start+length.",
                 (context, arguments) =>
                 {
@@ -119,7 +119,7 @@ namespace MISP
                 }));
 
             functions.Add("sort", Function.MakeSystemFunction("sort",
-                ArgumentInfo.ParseArguments(this, "string variable_name", "list in", "code code"),
+                Arguments.ParseArguments(this, "string variable_name", "list in", "code code"),
                 "vname list sort_func: Sorts elements according to sort func; sort func returns integer used to order items.",
                 (context, arguments) =>
                 {
@@ -133,7 +133,7 @@ namespace MISP
                 }));
 
             functions.Add("reverse", Function.MakeSystemFunction("reverse",
-                ArgumentInfo.ParseArguments(this, "list list"),
+                Arguments.ParseArguments(this, "list list"),
                 "list: Reverse the list.",
                 (context, arguments) =>
                 {

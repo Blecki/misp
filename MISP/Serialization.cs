@@ -159,20 +159,21 @@ namespace MISP
         public void EmitFunction(ScriptObject func, string type, System.IO.TextWriter to)
         {
             to.Write("(" + type + " \"" + func.gsp("@name") + "\" (");
-            var arguments = func["@arguments"] as List<ArgumentInfo>;
-            foreach (var arg in arguments)
+            var arguments = func["@arguments"] as ScriptList;
+            foreach (var arg_ in arguments)
             {
-                to.Write("\"" + arg.type.Typename + " ");
-                if (arg.optional) to.Write("?");
-                if (arg.repeat) to.Write("+");
-                to.Write(arg.name + "\" ");
+                var arg = arg_ as ScriptObject;
+                to.Write("\"" + (arg["@type"] as Type).Typename + " ");
+                if (arg["@optional"] != null) to.Write("?");
+                if (arg["@repeat"] != null) to.Write("+");
+                to.Write(arg.gsp("name") + "\" ");
             }
             to.Write(") ");
             Engine.SerializeCode(to, func["@function-body"] as ScriptObject);
             to.Write(" " + func.gsp("@help") + ")\n");
         }
 
-        public void SerializeEnvironment(System.IO.TextWriter to, ScriptObject @this)
+        public void SerializeEnvironment(System.IO.TextWriter to, Scope scope)
         {
             var globalFunctions = new List<ScriptObject>();
             var objects = new List<ObjectRecord>();
@@ -188,11 +189,11 @@ namespace MISP
             //Filter objects into objects and lambda list
             foreach (var func in globalFunctions)
                 EnumerateObject(func["@declaration-scope"] as ScriptObject, globalFunctions, objects, lambdas);
-            EnumerateObject(@this, globalFunctions, objects, lambdas);
+            EnumerateObject(scope, globalFunctions, objects, lambdas);
 
             //Filter out objects with just a single reference
             objects = new List<ObjectRecord>(objects.Where((o) => { return o.referenceCount > 1; }));
-            AddRef(@this, objects);
+            AddRef(scope, objects);
 
             to.WriteLine("(lastarg");
 
@@ -229,7 +230,7 @@ namespace MISP
                 EmitObjectRoot(to, obj.obj, globalFunctions, objects, lambdas);
 
             //Emit footer
-            var thisIndex = IndexIn(@this, objects);
+            var thisIndex = IndexIn(scope, objects);
             to.Write("(index objects " + thisIndex + "))))");
         }
 

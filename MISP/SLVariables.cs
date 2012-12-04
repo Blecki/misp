@@ -16,7 +16,7 @@ namespace MISP
         private void SetupVariableFunctions()
         {
             functions.Add("var", Function.MakeSystemFunction("var",
-                ArgumentInfo.ParseArguments(this, "string name", "value"),
+                Arguments.ParseArguments(this, "string name", "value"),
                 "name value : Assign value to a variable named [name].", (context, arguments) =>
                 {
                     if (specialVariables.ContainsKey(ScriptObject.AsString(arguments[0])))
@@ -33,7 +33,7 @@ namespace MISP
                 }));
 
             functions.Add("let", Function.MakeSystemFunction("let",
-                ArgumentInfo.ParseArguments(this, "code pairs", "code code"),
+                Arguments.ParseArguments(this, "code pairs", "code code"),
                 "^( ^(\"name\" value ?cleanup-code) ^(...) ) code : Create temporary variables, run code. Optional clean-up code for each variable.",
                 (context, arguments) =>
                 {

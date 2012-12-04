@@ -11,7 +11,6 @@ namespace MISP
         public Action<String> Write = (s) => { };
         public Engine mispEngine;
         public Context mispContext;
-        public ScriptObject mispObject;
 
         public void PrettyPrint(Object what, int depth)
         {
@@ -78,10 +77,8 @@ namespace MISP
         {
             mispEngine = new Engine();
             mispContext = new Context();
-            mispObject = new GenericScriptObject();
             mispContext.limitExecutionTime = false;
-            mispContext.Scope.PushVariable("this", mispObject);
-
+ 
             Write("MISP Console 1.0\n");
 
             mispEngine.AddFunction("run-file", "Load and run a file.",
@@ -107,12 +104,13 @@ namespace MISP
                     var obj = arguments[0] as ScriptObject;
                     stream.Write("Name: ");
                     stream.Write(obj.gsp("@name") + "\nHelp: " + obj.gsp("@help") + "\nArguments: ");
-                    foreach (var arg in obj["@arguments"] as List<ArgumentInfo>)
+                    foreach (var arg_ in obj["@arguments"] as ScriptList)
                     {
-                        stream.Write(arg.type.Typename + " ");
-                        if (arg.optional) stream.Write("?");
-                        if (arg.repeat) stream.Write("+");
-                        stream.Write(arg.name + ", ");
+                        var arg = arg_ as ScriptObject;
+                        stream.Write((arg["@type"] as Type).Typename + " ");
+                        if (arg["@optional"] != null) stream.Write("?");
+                        if (arg["@repeat"] != null) stream.Write("+");
+                        stream.Write(arg["@name"] + ", ");
                     }
                     stream.Write("\nBody: ");
                     if (obj["@function-body"] is ScriptObject)
@@ -139,7 +137,7 @@ namespace MISP
             mispEngine.AddFunction("save-environment", "", (context, arguments) =>
             {
                 var file = new System.IO.StreamWriter(arguments[0].ToString());
-                mispEngine.SerializeEnvironment(file, mispObject);
+                mispEngine.SerializeEnvironment(file, context.Scope);
                 file.Close();
                 return true;
             }, "string file");
@@ -151,12 +149,17 @@ namespace MISP
                 newConsole.mispContext.ResetTimer();
                 newConsole.mispContext.evaluationState = EvaluationState.Normal;
                 var result = newConsole.mispEngine.EvaluateString(newConsole.mispContext, file, arguments[0].ToString());
-                newConsole.mispObject = result as ScriptObject;
+                var scope = new Scope();
+                foreach (var memberName in (result as ScriptObject).ListProperties())
+                {
+                    var value = (result as ScriptObject).GetLocalProperty(memberName as String);
+                    scope.PushVariable(memberName as String, value);
+                }
                 if (newConsole.mispContext.evaluationState == EvaluationState.Normal)
                 {
                     mispContext = newConsole.mispContext;
+                    mispContext.ReplaceScope(scope);
                     mispEngine = newConsole.mispEngine;
-                    mispObject = newConsole.mispObject;
                     SetupEnvironmentFunctions();
                     Write("Loaded.\n");
                     return true;
@@ -177,6 +180,7 @@ namespace MISP
                 mispContext.ResetTimer();
                 mispContext.evaluationState = EvaluationState.Normal;
                 var result = mispEngine.EvaluateString(mispContext, str, "");
+
                 if (mispContext.evaluationState == EvaluationState.Normal)
                 {
                     Write(MISP.Console.PrettyPrint2(result, 0) + "\n");
@@ -185,6 +189,11 @@ namespace MISP
                 {
                     Write("Error:\n");
                     Write(MISP.Console.PrettyPrint2(mispContext.errorObject, 0));
+                }
+
+                if (!mispContext.CheckScope())
+                {
+                    Write("Error: Scopes not properly cleaned.\n");
                 }
             }
             catch (Exception e)

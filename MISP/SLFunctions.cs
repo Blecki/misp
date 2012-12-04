@@ -19,10 +19,10 @@ namespace MISP
         {
             var functionName = ArgumentType<String>(arguments[0]);
 
-            List<ArgumentInfo> argumentInfo = null;
+            ScriptList argumentInfo = null;
             try
             {
-                argumentInfo = ArgumentInfo.ParseArguments(this, ArgumentType<ScriptList>(arguments[1]));
+                argumentInfo = Arguments.ParseArguments(this, ArgumentType<ScriptList>(arguments[1]));
             }
             catch (ScriptError e)
             {
@@ -55,13 +55,13 @@ namespace MISP
                     if (context.evaluationState == EvaluationState.Normal && !String.IsNullOrEmpty(r.gsp("@name")))
                         functions.Upsert(r.gsp("@name"), r);
                     return r;
-                }, "string name", "list arguments", "code code", "?comment");
+                }, "identifier name", "list arguments", "code code", "?comment");
 
             AddFunction("lambda", "name arguments code",
                 (context, arguments) =>
                 {
                     return defunImple(context, arguments, false);
-                }, "string name", "list arguments", "code code", "?comment");
+                }, "identifier name", "list arguments", "code code", "?comment");
 
             AddFunction("lfun", "Creates a local function. This is functionally equivilent to using 'let' to store a function in a local variable.",
                 (context, arguments) =>
@@ -69,7 +69,7 @@ namespace MISP
                     var r = defunImple(context, arguments, true);
                     if (context.evaluationState == EvaluationState.Normal) context.Scope.PushVariable(r.gsp("@name"), r);
                     return r;
-                }, "string name", "list arguments", "code code", "?comment");
+                }, "identifier name", "list arguments", "code code", "?comment");
         }
 
     }

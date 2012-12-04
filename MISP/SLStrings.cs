@@ -10,7 +10,7 @@ namespace MISP
         private void SetupStringFunctions()
         {
             functions.Add("substr", Function.MakeSystemFunction("substr",
-                ArgumentInfo.ParseArguments(this, "value", "integer start", "integer ?count"),
+                Arguments.ParseArguments(this, "value", "integer start", "integer ?count"),
                 "string start ?count: returns sub-string of string starting at start.",
                 (context, arguments) =>
                 {
@@ -28,7 +28,7 @@ namespace MISP
                 }));
 
             functions.Add("strcat", Function.MakeSystemFunction("strcat",
-                ArgumentInfo.ParseArguments(this, "?+item"), "<n> : Concatenate many strings into one.",
+                Arguments.ParseArguments(this, "?+item"), "<n> : Concatenate many strings into one.",
                 (context, arguments) =>
                 {
                     var r = "";
@@ -38,7 +38,7 @@ namespace MISP
                 }));
 
             functions.Add("strrepeat", Function.MakeSystemFunction("strrepeat",
-                ArgumentInfo.ParseArguments(this, "integer n", "string part"),
+                Arguments.ParseArguments(this, "integer n", "string part"),
                 "n part: Create a string consisting of part n times.",
                     (context, arguments) =>
                     {
@@ -52,7 +52,7 @@ namespace MISP
             ));
 
             functions.Add("asstring", Function.MakeSystemFunction("asstring",
-                ArgumentInfo.ParseArguments(this, "value", "integer B"),
+                Arguments.ParseArguments(this, "value", "integer B"),
                 "A B : convert A to a string to depth B.",
                 (context, arguments) =>
                 {

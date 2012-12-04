@@ -30,6 +30,24 @@ namespace MISPConsole
                 if (command[0] == '\\')
                 {
                     if (command.StartsWith("\\q")) return;
+                    else if (command.StartsWith("\\limit"))
+                    {
+                        try
+                        {
+                            var time = Convert.ToSingle(command.Substring(7));
+                            console.mispContext.allowedExecutionTime = TimeSpan.FromSeconds(time);
+                            console.mispContext.limitExecutionTime = time > 0;
+
+                            if (console.mispContext.limitExecutionTime)
+                                System.Console.Write("Execution time limit set to " + console.mispContext.allowedExecutionTime + "\n");
+                            else
+                                System.Console.Write("Execution time limit disabled.\n");
+                        }
+                        catch (Exception e)
+                        {
+                            System.Console.Write("Error: " + e.Message + "\n");
+                        }
+                    }
                     else System.Console.Write("I don't understand.\n");
                 }
                 else

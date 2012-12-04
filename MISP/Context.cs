@@ -29,9 +29,35 @@ namespace MISP
             (errorObject.GetProperty("stack-trace") as ScriptList).Add(message);
         }
 
+        public void ReplaceScope(Scope scope)
+        {
+            scopeStack.Clear();
+            PushScope(scope);
+        }
+
+        public bool CheckScope()
+        {
+            if (scopeStack.Count > 1)
+            {
+                var scope = Scope;
+                scopeStack.Clear();
+                PushScope(scope);
+                return false;
+            }
+            else if (scopeStack.Count == 0)
+            {
+                PushScope(new Scope());
+                return false;
+            }
+            else
+                return true;
+        }
+
         public DateTime executionStart;
         public bool limitExecutionTime = true;
         public TimeSpan allowedExecutionTime = TimeSpan.FromSeconds(10);
+        public int maximumCallDepth = 500;
+        public int callDepth = 0;
 
         public Action<String> trace = null;
         public int traceDepth = 0;
@@ -42,6 +68,7 @@ namespace MISP
             PushScope(new Scope());
             ResetTimer();
             evaluationState = EvaluationState.Normal;
+            callDepth = 0;
         }
 
         public void ResetTimer()
@@ -65,6 +92,6 @@ namespace MISP
         public void PushScope(Scope scope) { scope.parentScope = Scope; scopeStack.Add(scope); }
         public void PopScope() { Scope.parentScope = null; scopeStack.RemoveAt(scopeStack.Count - 1); }
 
-       
+
     }
 }

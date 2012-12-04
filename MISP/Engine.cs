@@ -30,11 +30,12 @@ namespace MISP
             this.SetupStandardLibrary();
         }
 
-        public void AddFunction(String name, String comment, Func<Context, ScriptList, Object> func,
+        public ScriptObject AddFunction(String name, String comment, Func<Context, ScriptList, Object> func,
             params String[] arguments)
         {
-            functions.Add(name, Function.MakeSystemFunction(name, ArgumentInfo.ParseArguments(this, arguments),
-                comment, func));
+            var r = Function.MakeSystemFunction(name, Arguments.ParseArguments(this, arguments), comment, func);
+            functions.Add(name, r);
+            return r;
         }
 
         //public Function MakeLambda(String name, String comment, Func<Context, ScriptList, Object> func,

@@ -49,11 +49,11 @@ namespace MISP
 
 
             functions.Add("=", Function.MakeSystemFunction("equal",
-                ArgumentInfo.ParseArguments(this, "+value"),
+                Arguments.ParseArguments(this, "+value"),
                 "<n> : True if all arguments equal, null otherwise.", equalBody));
 
             functions.Add("!=", Function.MakeSystemFunction("notequal",
-                ArgumentInfo.ParseArguments(this, "+value"),
+                Arguments.ParseArguments(this, "+value"),
                 "<n> : Null if all arguments equal, true otherwise.",
                 (context, arguments) =>
                 {
@@ -62,7 +62,7 @@ namespace MISP
                 }));
 
             functions.Add("&&", Function.MakeSystemFunction("and",
-                ArgumentInfo.ParseArguments(this, "+value"),
+                Arguments.ParseArguments(this, "+value"),
                 "<n> : True if all arguments true.",
                 (context, arguments) =>
                 {
@@ -71,7 +71,7 @@ namespace MISP
                 }));
 
             functions.Add("||", Function.MakeSystemFunction("or",
-                ArgumentInfo.ParseArguments(this, "+value"),
+                Arguments.ParseArguments(this, "+value"),
                 "<n> : True if any argument is true.",
                 (context, arguments) =>
                 {
@@ -81,7 +81,7 @@ namespace MISP
 
 
             functions.Add(">=", Function.MakeSystemFunction("atleast",
-                ArgumentInfo.ParseArguments(this, "A", "B"),
+                Arguments.ParseArguments(this, "A", "B"),
                 "A B : true if A >= B, null otherwise.",
                 (context, arguments) =>
                 {
@@ -90,7 +90,7 @@ namespace MISP
                 }));
 
             functions.Add(">", Function.MakeSystemFunction("greaterthan",
-                ArgumentInfo.ParseArguments(this, "A", "B"),
+                Arguments.ParseArguments(this, "A", "B"),
                 "A B : true if A > B, null otherwise.",
                 (context, arguments) =>
                 {
@@ -99,7 +99,7 @@ namespace MISP
                 }));
 
             functions.Add("<=", Function.MakeSystemFunction("nomorethan",
-                ArgumentInfo.ParseArguments(this, "A", "B"),
+                Arguments.ParseArguments(this, "A", "B"),
                 "A B : true if A <= B, null otherwise.",
                 (context, arguments) =>
                 {
@@ -108,7 +108,7 @@ namespace MISP
                 }));
 
             functions.Add("<", Function.MakeSystemFunction("lessthan",
-                ArgumentInfo.ParseArguments(this, "A", "B"),
+                Arguments.ParseArguments(this, "A", "B"),
                 "A B : true if A < B, null otherwise.",
                 (context, arguments) =>
                 {
@@ -117,7 +117,7 @@ namespace MISP
                 }));
 
             functions.Add("!", Function.MakeSystemFunction("not",
-                ArgumentInfo.ParseArguments(this, "value"),
+                Arguments.ParseArguments(this, "value"),
                 "A : true if A is null, null otherwise.",
                 (context, arguments) =>
                 {
@@ -126,7 +126,7 @@ namespace MISP
                 }));
 
             functions.Add("if", Function.MakeSystemFunction("if",
-                ArgumentInfo.ParseArguments(this, "condition", "code then", "code ?else"),
+                Arguments.ParseArguments(this, "condition", "code then", "code ?else"),
                 "condition then else : If condition evaluates to true, evaluate and return then. Otherwise, evaluate and return else.",
                 (context, arguments) =>
                 {

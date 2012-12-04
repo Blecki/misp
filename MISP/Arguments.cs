@@ -5,26 +5,22 @@ using System.Text;
 
 namespace MISP
 {
-    public class ArgumentInfo
+    public class Arguments
     {
-        public String name;
-        public bool optional;
-        public bool repeat;
-        public bool notNull;
-        public Type type;
-
-        public static List<ArgumentInfo> ParseArguments(Engine engine, params String[] args)
+        public static ScriptList ParseArguments(Engine engine, params String[] args)
         {
             var list = new ScriptList();
             foreach (var arg in args) list.Add(arg);
             return ParseArguments(engine, list);
         }
 
-        public static List<ArgumentInfo> ParseArguments(Engine engine, ScriptList args)
+        public static ScriptList ParseArguments(Engine engine, ScriptList args)
         {
-            var r = new List<ArgumentInfo>();
+            var r = new ScriptList();
             foreach (var arg in args)
             {
+                var info = new GenericScriptObject();
+
                 if (!(arg is String)) throw new ScriptError("Argument names must be strings.", null);
                 var parts = (arg as String).Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                 String typeDecl = "";
@@ -41,28 +37,31 @@ namespace MISP
                 else
                     throw new ScriptError("Invalid argument declaration", null);
 
-                var argInfo = new ArgumentInfo();
+                //var argInfo = new ArgumentInfo();
 
                 if (!String.IsNullOrEmpty(typeDecl))
                 {
                     if (engine.types.ContainsKey(typeDecl.ToUpperInvariant()))
-                        argInfo.type = engine.types[typeDecl.ToUpperInvariant()];
+                        info["@type"] = engine.types[typeDecl.ToUpperInvariant()];
+                    //argInfo.type = engine.types[typeDecl.ToUpperInvariant()];
                     else
                         throw new ScriptError("Unknown type " + typeDecl, null);
                 }
                 else
-                    argInfo.type = Type.Anything;
+                    info["@type"] = Type.Anything;
+                    //argInfo.type = Type.Anything;
 
                 while (semanticDecl.StartsWith("?") || semanticDecl.StartsWith("+"))
                 {
-                    if (semanticDecl[0] == '?') argInfo.optional = true;
-                    if (semanticDecl[0] == '+') argInfo.repeat = true;
+                    if (semanticDecl[0] == '?') info["@optional"] = true; // argInfo.optional = true;
+                    if (semanticDecl[0] == '+') info["@repeat"] = true; // argInfo.repeat = true;
                     semanticDecl = semanticDecl.Substring(1);
                 }
 
-                argInfo.name = semanticDecl;
+                info["@name"] = semanticDecl;
+                //argInfo.name = semanticDecl;
 
-                r.Add(argInfo);
+                r.Add(info);//argInfo);
             }
 
             return r;

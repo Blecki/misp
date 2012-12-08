@@ -9,9 +9,7 @@ namespace MISP
     {
         private void SetupLoopFunctions()
         {
-            functions.Add("map", Function.MakeSystemFunction("map",
-                Arguments.ParseArguments(this, "string variable_name", "list in", "code code"), 
-                "variable_name list code : Transform one list into another",
+            AddFunction("map", "variable_name list code : Transform one list into another",
                 (context, arguments) =>
                 {
                     var vName = ArgumentType<String>(arguments[0]);
@@ -26,29 +24,33 @@ namespace MISP
                     }
                     context.Scope.PopVariable(vName);
                     return result;
-                }));
+                },
+                Arguments.Arg("variable-name"),
+                Arguments.Mutator(Arguments.Arg("in"), "(@list value)"),
+                Arguments.Lazy("code"));
 
-            functions.Add("mapi", Function.MakeSystemFunction("mapi",
-                Arguments.ParseArguments(this, "string variable_name", "list in", "code code"),
-                "variable_name list code : Like map, except variable_name will hold the index not the value.",
-                (context, arguments) =>
-                {
-                    var vName = ArgumentType<String>(arguments[0]);
-                    var list = ArgumentType<ScriptList>(arguments[1]);
-                    var code = ArgumentType<ScriptObject>(arguments[2]);
-                    var result = new ScriptList();
-                    context.Scope.PushVariable(vName, null);
-                    for (int i = 0; i < list.Count; ++i)
-                    {
-                        context.Scope.ChangeVariable(vName, i);
-                        result.Add(Evaluate(context, code, true));
-                    }
-                    context.Scope.PopVariable(vName);
-                    return result;
-                }));
+            AddFunction("mapi", "Like map, except the variable will hold the index.",
+    (context, arguments) =>
+    {
+        var vName = ArgumentType<String>(arguments[0]);
+        var list = ArgumentType<ScriptList>(arguments[1]);
+        var code = ArgumentType<ScriptObject>(arguments[2]);
+        var result = new ScriptList();
+        context.Scope.PushVariable(vName, null);
+        for (int i = 0; i < list.Count; ++i)
+        {
+            context.Scope.ChangeVariable(vName, i);
+            result.Add(Evaluate(context, code, true));
+        }
+        context.Scope.PopVariable(vName);
+        return result;
+    },
+    Arguments.Arg("variable-name"),
+    Arguments.Mutator(Arguments.Arg("in"), "(@list value)"),
+    Arguments.Lazy("code"));
 
-            functions.Add("mapex", Function.MakeSystemFunction("mapex",
-                Arguments.ParseArguments(this, "string variable_name", "start", "code code", "code next"), 
+            
+            AddFunction("mapex", 
                 "variable_name start code next : Like map, but the next element is the result of 'next'. Stops when next = null.",
                 (context, arguments) =>
                 {
@@ -68,10 +70,13 @@ namespace MISP
 
                     context.Scope.PopVariable(vName);
                     return result;
-                }));
+                },
+                Arguments.Arg("variable-name"),
+                Arguments.Arg("start"),
+                Arguments.Lazy("code"),
+                Arguments.Lazy("next"));
 
-            functions.Add("for", Function.MakeSystemFunction("for",
-                Arguments.ParseArguments(this, "string variable_name", "list in", "code code"), 
+            AddFunction("for", 
                 "variable_name list code : Execute code for each item in list. Returns result of last run of code.",
                 (context, arguments) =>
                 {
@@ -89,10 +94,12 @@ namespace MISP
                     context.Scope.PopVariable(vName);
 
                     return result;
-                }));
+                },
+                Arguments.Arg("variable-name"),
+                Arguments.Mutator(Arguments.Arg("list"), "(@list value)"),
+                Arguments.Lazy("code"));
 
-            functions.Add("while", Function.MakeSystemFunction("while",
-                Arguments.ParseArguments(this, "code condition", "code code"),
+            AddFunction("while", 
                 "condition code : Repeat code while condition evaluates to true.",
                 (context, arguments) =>
                 {
@@ -102,23 +109,10 @@ namespace MISP
                     while (Evaluate(context, cond, true) != null)
                         Evaluate(context, code, true);
                     return null;
-                }));
-
-            functions.Add("repeat", Function.MakeSystemFunction("repeat",
-                Arguments.ParseArguments(this, "integer count", "code code"),
-                "count code: Repeat code count times. If you're looking for a indexed for loop, try mapex.",
-                (context, arguments) =>
-                {
-                    var count = arguments[0] as int?;
-                    if (count == null || !count.HasValue) return null;
-                    var _count = count.Value;
-                    while (_count > 0)
-                    {
-                        Evaluate(context, arguments[1], true, true);
-                        _count -= 1;
-                    }
-                    return null;
-                }));
+                },
+                Arguments.Lazy("condition"),
+                Arguments.Lazy("code"));
+            
         }
     }
 }

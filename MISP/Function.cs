@@ -66,6 +66,16 @@ public static ScriptObject MakeFunction(
                 return arguments[index] as ScriptObject;
         }
 
+        private static Object MutateArgument(Object argument, ScriptObject argumentDescripter, Engine engine, Context context)
+        {
+            var mutator = argumentDescripter["@mutator"];
+            if (mutator == null) return argument;
+            context.Scope.PushVariable("value", argument);
+            var result = engine.Evaluate(context, mutator, true);
+            context.Scope.PopVariable("value");
+            return result;
+        }
+
         public static Object Invoke(ScriptObject func, Engine engine, Context context, ScriptList arguments)
         {
             var name = func.gsp("@name");
@@ -95,7 +105,8 @@ public static ScriptObject MakeFunction(
                         var list = new ScriptList();
                         while (argumentIndex < arguments.Count) //Handy side effect: If no argument is passed for an optional repeat
                         {                                       //argument, it will get an empty list.
-                            list.Add((info["@type"] as Type).ProcessArgument(context, arguments[argumentIndex]));
+                            list.Add(MutateArgument(arguments[argumentIndex], info, engine, context));
+                            //list.Add((info["@type"] as Type).ProcessArgument(context, arguments[argumentIndex]));
                             if (context.evaluationState == EvaluationState.UnwindingError) return null;
                             ++argumentIndex;
                         }
@@ -105,11 +116,12 @@ public static ScriptObject MakeFunction(
                     {
                         if (argumentIndex < arguments.Count)
                         {
-                            newArguments.Add((info["@type"] as Type).ProcessArgument(context, arguments[argumentIndex]));
+                            newArguments.Add(MutateArgument(arguments[argumentIndex], info, engine, context));
+                            //newArguments.Add((info["@type"] as Type).ProcessArgument(context, arguments[argumentIndex]));
                             if (context.evaluationState == EvaluationState.UnwindingError) return null;
                         }
                         else if (info["@optional"] != null)
-                            newArguments.Add((info["@type"] as Type).CreateDefault());
+                            newArguments.Add(MutateArgument(null, info, engine, context));
                         else
                         {
                             context.RaiseNewError("Not enough arguments to " + name, context.currentNode);

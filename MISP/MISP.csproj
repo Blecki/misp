@@ -71,7 +71,7 @@
     <Compile Include="SerializeCode.cs" />
     <Compile Include="SLFile.cs" />
     <Compile Include="Engine.cs" />
-    <Compile Include="ArgumentInfo.cs" />
+    <Compile Include="Arguments.cs" />
     <Compile Include="PrefixCheck.cs" />
     <Compile Include="ParseState.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -88,7 +88,6 @@
     <Compile Include="SLStrings.cs" />
     <Compile Include="SLVariables.cs" />
     <Compile Include="StandardLibrary.cs" />
-    <Compile Include="Type.cs" />
     <Compile Include="Upsert.cs" />
   </ItemGroup>
   <ItemGroup />

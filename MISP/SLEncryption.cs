@@ -13,16 +13,16 @@ namespace MISP
 
         private void SetupEncryptionFunctions()
         {
-            functions.Add("hash", Function.MakeSystemFunction("hash",
-                Arguments.ParseArguments(this, "string value", "string salt"),
-                "string: Hashes the string.",
-                (context, arguments) =>
-                {
-                    var encodedString = byteEncoding.GetBytes(ScriptObject.AsString(arguments[0])
-                        + ScriptObject.AsString(arguments[1]));
-                    var hashed = hash.ComputeHash(encodedString);
-                    return Convert.ToBase64String(hashed);
-                }));
+            //functions.Add("hash", Function.MakeSystemFunction("hash",
+            //    Arguments.ParseArguments(this, "string value", "string salt"),
+            //    "string: Hashes the string.",
+            //    (context, arguments) =>
+            //    {
+            //        var encodedString = byteEncoding.GetBytes(ScriptObject.AsString(arguments[0])
+            //            + ScriptObject.AsString(arguments[1]));
+            //        var hashed = hash.ComputeHash(encodedString);
+            //        return Convert.ToBase64String(hashed);
+            //    }));
         }
     }
 }

@@ -15,8 +15,7 @@ namespace MISP
     {
         private void SetupVariableFunctions()
         {
-            functions.Add("var", Function.MakeSystemFunction("var",
-                Arguments.ParseArguments(this, "string name", "value"),
+            AddFunction("var",
                 "name value : Assign value to a variable named [name].", (context, arguments) =>
                 {
                     if (specialVariables.ContainsKey(ScriptObject.AsString(arguments[0])))
@@ -30,10 +29,11 @@ namespace MISP
                         catch (Exception e) { context.RaiseNewError(e.Message, context.currentNode); }
                     }
                     return arguments[1];
-                }));
+                },
+                Arguments.Arg("name"),
+                Arguments.Arg("value"));
 
-            functions.Add("let", Function.MakeSystemFunction("let",
-                Arguments.ParseArguments(this, "code pairs", "code code"),
+            AddFunction("let",
                 "^( ^(\"name\" value ?cleanup-code) ^(...) ) code : Create temporary variables, run code. Optional clean-up code for each variable.",
                 (context, arguments) =>
                 {
@@ -60,7 +60,7 @@ namespace MISP
 
                     result = Evaluate(context, code, true);
 
-                    RUN_CLEANUP:
+                RUN_CLEANUP:
                     foreach (var item in cleanUp)
                     {
                         if (item.cleanupCode != null) Evaluate(context, item.cleanupCode, true, true);
@@ -68,7 +68,9 @@ namespace MISP
                     }
 
                     return result;
-                }));           
+                },
+                Arguments.Lazy("variables"),
+                Arguments.Lazy("code"));
         }
     }
 }

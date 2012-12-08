@@ -34,108 +34,60 @@ namespace MISP
                         }
                         else
                             if ((dynamic)arguments[i] != (dynamic)arguments[i - 1]) return null;
-                            //else if (firstType == typeof(int))
-                            //{
-                            //    if ((arguments[i] as int?).Value != (arguments[i - 1] as int?).Value) return null;
-                            //}
-                            //else if (firstType == typeof(bool))
-                            //{
-                            //    if ((arguments[i] as bool?).Value != (arguments[i - 1] as bool?).Value) return null;
-                            //}
-                            //else if (!Object.ReferenceEquals(arguments[i], arguments[i - 1])) return null;
                     }
                     return true;
                 };
 
+            AddFunction("=", "<n> : True if all arguments equal, null otherwise.",
+                equalBody,
+                Arguments.Repeat("value"));
 
-            functions.Add("=", Function.MakeSystemFunction("equal",
-                Arguments.ParseArguments(this, "+value"),
-                "<n> : True if all arguments equal, null otherwise.", equalBody));
+            AddFunction("!=", "<n> : Null if all arguments equal, true otherwise.",
+                (context, arguments) => { return equalBody(context, arguments) == null ? (Object)true : null; },
+                Arguments.Repeat("value"));
 
-            functions.Add("!=", Function.MakeSystemFunction("notequal",
-                Arguments.ParseArguments(this, "+value"),
-                "<n> : Null if all arguments equal, true otherwise.",
-                (context, arguments) =>
-                {
-                    if (equalBody(context, arguments) == null) return true;
-                    return null;
-                }));
-
-            functions.Add("&&", Function.MakeSystemFunction("and",
-                Arguments.ParseArguments(this, "+value"),
-                "<n> : True if all arguments true.",
+            AddFunction("&&", "<n> : True if all arguments are true.",
                 (context, arguments) =>
                 {
                     foreach (var arg in arguments[0] as ScriptList) if (arg == null) return null;
                     return true;
-                }));
+                }, Arguments.Repeat("value"));
 
-            functions.Add("||", Function.MakeSystemFunction("or",
-                Arguments.ParseArguments(this, "+value"),
-                "<n> : True if any argument is true.",
+            AddFunction("||", "<n> : True if any argument is true.",
+               (context, arguments) =>
+               {
+                   foreach (var arg in arguments[0] as ScriptList) if (arg != null) return true;
+                   return null;
+               }, Arguments.Repeat("value"));
+
+            AddFunction(">", "true if A > B",
+                (context, arguments) => { return ((dynamic)arguments[0] > (dynamic)arguments[1]) ? (Object)true : null; },
+                Arguments.Arg("A"), Arguments.Arg("B"));
+
+            AddFunction(">=", "true if A >= B",
+                (context, arguments) => { return ((dynamic)arguments[0] >= (dynamic)arguments[1]) ? (Object)true : null; },
+                Arguments.Arg("A"), Arguments.Arg("B"));
+
+            AddFunction("<", "true if A < B",
+    (context, arguments) => { return ((dynamic)arguments[0] < (dynamic)arguments[1]) ? (Object)true : null; },
+    Arguments.Arg("A"), Arguments.Arg("B"));
+
+            AddFunction("<=", "true if A <= B",
+    (context, arguments) => { return ((dynamic)arguments[0] <= (dynamic)arguments[1]) ? (Object)true : null; },
+    Arguments.Arg("A"), Arguments.Arg("B"));
+
+            AddFunction("!", "",
+                (context, arguments) => { return (arguments[0] == null) ? (Object)true : null; },
+                Arguments.Arg("value"));
+
+            AddFunction("if", "",
                 (context, arguments) =>
                 {
-                    foreach (var arg in arguments[0] as ScriptList) if (arg != null) return true;
-                    return false;
-                }));
-
-
-            functions.Add(">=", Function.MakeSystemFunction("atleast",
-                Arguments.ParseArguments(this, "A", "B"),
-                "A B : true if A >= B, null otherwise.",
-                (context, arguments) =>
-                {
-                    if ((dynamic)arguments[0] >= (dynamic)arguments[1]) return true;
-                    return null;
-                }));
-
-            functions.Add(">", Function.MakeSystemFunction("greaterthan",
-                Arguments.ParseArguments(this, "A", "B"),
-                "A B : true if A > B, null otherwise.",
-                (context, arguments) =>
-                {
-                    if ((dynamic)arguments[0] > (dynamic)arguments[1]) return true;
-                    return null;
-                }));
-
-            functions.Add("<=", Function.MakeSystemFunction("nomorethan",
-                Arguments.ParseArguments(this, "A", "B"),
-                "A B : true if A <= B, null otherwise.",
-                (context, arguments) =>
-                {
-                    if ((dynamic)arguments[0] <= (dynamic)arguments[1]) return true;
-                    return null;
-                }));
-
-            functions.Add("<", Function.MakeSystemFunction("lessthan",
-                Arguments.ParseArguments(this, "A", "B"),
-                "A B : true if A < B, null otherwise.",
-                (context, arguments) =>
-                {
-                    if ((dynamic)arguments[0] < (dynamic)arguments[1]) return true;
-                    return null;
-                }));
-
-            functions.Add("!", Function.MakeSystemFunction("not",
-                Arguments.ParseArguments(this, "value"),
-                "A : true if A is null, null otherwise.",
-                (context, arguments) =>
-                {
-                    if (arguments[0] == null) return true;
-                    else return null;
-                }));
-
-            functions.Add("if", Function.MakeSystemFunction("if",
-                Arguments.ParseArguments(this, "condition", "code then", "code ?else"),
-                "condition then else : If condition evaluates to true, evaluate and return then. Otherwise, evaluate and return else.",
-                (context, arguments) =>
-                {
-                    if (arguments[0] != null)
-                        return Evaluate(context, arguments[1], true);
-                    else
-                        return Evaluate(context, arguments[2], true);
-                }));
-
+                    return (arguments[0] == null) ?
+                        Evaluate(context, arguments[2], true) :
+                        Evaluate(context, arguments[1], true);
+                },
+                Arguments.Arg("condition"), Arguments.Lazy("then"), Arguments.Optional(Arguments.Lazy("else")));
         }
     }
 }

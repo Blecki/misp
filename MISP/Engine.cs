@@ -12,14 +12,7 @@ namespace MISP
         internal Dictionary<String, ScriptObject> functions = new Dictionary<String, ScriptObject>();
         internal Dictionary<String, Func<Context, Object>> specialVariables
             = new Dictionary<string, Func<Context, object>>();
-        internal Dictionary<String, Type> types = new Dictionary<string, Type>();
-
-        public void AddType(String name, Type type)
-        {
-            type.Typename = name;
-            types.Add(name, type);
-        }
-
+        
         public static T ArgumentType<T>(Object obj) where T : class
         {
             return obj as T;
@@ -30,10 +23,10 @@ namespace MISP
             this.SetupStandardLibrary();
         }
 
-        public ScriptObject AddFunction(String name, String comment, Func<Context, ScriptList, Object> func,
-            params String[] arguments)
+        public ScriptObject AddFunction(String name, String comment, Func<Context, ScriptList, Object> func, 
+            params ScriptObject[] arguments)
         {
-            var r = Function.MakeSystemFunction(name, Arguments.ParseArguments(this, arguments), comment, func);
+            var r = Function.MakeSystemFunction(name, new ScriptList(arguments), comment, func);
             functions.Add(name, r);
             return r;
         }

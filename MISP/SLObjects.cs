@@ -9,65 +9,61 @@ namespace MISP
     {
         private void SetupObjectFunctions()
         {
-            functions.Add("members", Function.MakeSystemFunction("members",
-                Arguments.ParseArguments(this, "object object"),
-                "object : List of names of object members.", (context, arguments) =>
+            AddFunction("members", "Lists all members of an object",
+                (context, arguments) =>
                 {
                     var obj = ArgumentType<ScriptObject>(arguments[0]);
                     return obj.ListProperties();
-                }));
+                },
+                    Arguments.Arg("object"));
 
-            functions.Add("record", Function.MakeSystemFunction("record",
-                Arguments.ParseArguments(this, "list +?pairs"),
-                "<List of key-value pairs> : Returns a new generic script object.",
+            AddFunction("record", "Create a new record.",
                 (context, arguments) =>
                 {
-                    var r = (new GenericScriptObject()) as ScriptObject;
+                    var r = new GenericScriptObject();
                     foreach (var item in arguments[0] as ScriptList)
                     {
                         var list = item as ScriptList;
                         if (list == null || list.Count != 2) throw new ScriptError("Record expects only pairs as arguments.", context.currentNode);
-                        r.SetProperty(ScriptObject.AsString(list[0]), list[1]);
+                        r[ScriptObject.AsString(list[0])] = list[1];
                     }
                     return r;
-                }));
+                },
+                Arguments.Mutator(Arguments.Repeat(Arguments.Optional("pairs")), "(@list value)"));
 
-            functions.Add("clone", Function.MakeSystemFunction("clone",
-                Arguments.ParseArguments(this, "object record", "list +?pairs"),
-                "record <List of key-value pairs> : Returns a new generic script object cloned from [record]",
+            AddFunction("clone", "Clone a record.",
                 (context, arguments) =>
                 {
-                    var from = ArgumentType<ScriptObject>(arguments[0]);
-                    var r = new GenericScriptObject(from);
+                    var r = new GenericScriptObject(arguments[0] as ScriptObject);
                     foreach (var item in arguments[1] as ScriptList)
                     {
                         var list = item as ScriptList;
-                        if (list == null || list.Count != 2) throw new ScriptError("Clone expects only pairs as arguments.", context.currentNode);
-                        r.SetProperty(ScriptObject.AsString(list[0]), list[1]);
+                        if (list == null || list.Count != 2) throw new ScriptError("Record expects only pairs as arguments.", context.currentNode);
+                        r[ScriptObject.AsString(list[0])] = list[1];
                     }
                     return r;
-                }));
+                },
+                Arguments.Arg("object"),
+                Arguments.Mutator(Arguments.Repeat(Arguments.Optional("pairs")), "(@list value)"));
 
-            functions.Add("set", Function.MakeSystemFunction("set",
-                Arguments.ParseArguments(this, "object object", "string property", "value"),
-                "object property value : Set the member of an object.", (context, arguments) =>
+            AddFunction("set", "Set a member on an object.",
+                (context, arguments) =>
                 {
                     try
                     {
-                        var obj = ArgumentType<ScriptObject>(arguments[0]);
-                        var vName = ScriptObject.AsString(arguments[1]);
-                        obj.SetProperty(vName, arguments[2]);
+                        (arguments[0] as ScriptObject)[ScriptObject.AsString(arguments[1])] = arguments[2];
                     }
                     catch (Exception e)
                     {
                         context.RaiseNewError("System Exception: " + e.Message, context.currentNode);
                     }
                     return arguments[2];
-                }));
+                },
+                Arguments.Arg("object"),
+                Arguments.Arg("property-name"),
+                Arguments.Arg("value"));
 
-            functions.Add("multi-set", Function.MakeSystemFunction("multi-set",
-                Arguments.ParseArguments(this, "object object", "list properties"),
-                "object properties: Set multiple members of an object.",
+            AddFunction("multi-set", "Set multiple members of an object.",
                 (context, arguments) =>
                 {
                     var obj = ArgumentType<ScriptObject>(arguments[0]);
@@ -79,20 +75,19 @@ namespace MISP
                         obj.SetProperty(ScriptObject.AsString(l[0]), l[1]);
                     }
                     return obj;
-                }));
+                },
+                Arguments.Arg("object"),
+                Arguments.Mutator(Arguments.Arg("list"), "(@list value)"));
 
-            functions.Add("delete", Function.MakeSystemFunction("delete",
-                Arguments.ParseArguments(this, "object object", "string property"),
-                "object property : Deletes a property from an object.",
+            AddFunction("delete", "Deletes a property from an object.",
                 (context, arguments) =>
                 {
-                    var obj = ArgumentType<ScriptObject>(arguments[0]);
-                    var vname = ScriptObject.AsString(arguments[1]);
-                    var value = obj.GetProperty(vname);
-                    obj.DeleteProperty(vname);
+                    var value = (arguments[0] as ScriptObject)[ScriptObject.AsString(arguments[1])];
+                    (arguments[0] as ScriptObject).DeleteProperty(ScriptObject.AsString(arguments[1]));
                     return value;
-                }));
-
+                },
+                    Arguments.Arg("object"),
+                    Arguments.Arg("property-name"));
         }
 
     }

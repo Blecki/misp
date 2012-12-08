@@ -22,7 +22,7 @@ namespace MISP
             ScriptList argumentInfo = null;
             try
             {
-                argumentInfo = Arguments.ParseArguments(this, ArgumentType<ScriptList>(arguments[1]));
+                argumentInfo = ArgumentType<ScriptList>(arguments[1]);
             }
             catch (ScriptError e)
             {
@@ -55,13 +55,21 @@ namespace MISP
                     if (context.evaluationState == EvaluationState.Normal && !String.IsNullOrEmpty(r.gsp("@name")))
                         functions.Upsert(r.gsp("@name"), r);
                     return r;
-                }, "identifier name", "list arguments", "code code", "?comment");
+                }, 
+                Arguments.Mutator(Arguments.Lazy("name"), "(@identifier value)"),
+                Arguments.Mutator(Arguments.Lazy("arguments"), "(@lazy-list value)"),
+                Arguments.Lazy("code"),
+                Arguments.Optional("comment"));
 
             AddFunction("lambda", "name arguments code",
                 (context, arguments) =>
                 {
                     return defunImple(context, arguments, false);
-                }, "identifier name", "list arguments", "code code", "?comment");
+                },
+                Arguments.Mutator(Arguments.Lazy("name"), "(@identifier value)"),
+                Arguments.Mutator(Arguments.Lazy("arguments"), "(@lazy-list value)"),
+                Arguments.Lazy("code"),
+                Arguments.Optional("comment"));
 
             AddFunction("lfun", "Creates a local function. This is functionally equivilent to using 'let' to store a function in a local variable.",
                 (context, arguments) =>
@@ -69,7 +77,11 @@ namespace MISP
                     var r = defunImple(context, arguments, true);
                     if (context.evaluationState == EvaluationState.Normal) context.Scope.PushVariable(r.gsp("@name"), r);
                     return r;
-                }, "identifier name", "list arguments", "code code", "?comment");
+                },
+                Arguments.Mutator(Arguments.Lazy("name"), "(@identifier value)"),
+                Arguments.Mutator(Arguments.Lazy("arguments"), "(@lazy-list value)"),
+                Arguments.Lazy("code"),
+                Arguments.Optional("comment"));
         }
 
     }

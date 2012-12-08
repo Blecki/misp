@@ -87,7 +87,7 @@ namespace MISP
                     var text = System.IO.File.ReadAllText(ScriptObject.AsString(arguments[0]));
                     return mispEngine.EvaluateString(context, text, ScriptObject.AsString(arguments[0]), false);
                 },
-            "string name");
+                Arguments.Arg("name"));
 
             mispEngine.AddFunction("print", "Print something.",
                 (context, arguments) =>
@@ -95,7 +95,7 @@ namespace MISP
                     foreach (var item in arguments[0] as ScriptList)
                         System.Console.Write(MISP.Console.PrettyPrint2(item, 0));
                     return null;
-                }, "?+item");
+                }, Arguments.Optional(Arguments.Repeat("value")));
 
             mispEngine.AddFunction("emitf", "Emit a function",
                 (context, arguments) =>
@@ -103,14 +103,18 @@ namespace MISP
                     var stream = new System.IO.StringWriter();
                     var obj = arguments[0] as ScriptObject;
                     stream.Write("Name: ");
-                    stream.Write(obj.gsp("@name") + "\nHelp: " + obj.gsp("@help") + "\nArguments: ");
+                    stream.Write(obj.gsp("@name") + "\nHelp: " + obj.gsp("@help") + "\nArguments: \n");
                     foreach (var arg_ in obj["@arguments"] as ScriptList)
                     {
+                        stream.Write("   ");
                         var arg = arg_ as ScriptObject;
-                        stream.Write((arg["@type"] as Type).Typename + " ");
+                        //stream.Write((arg["@type"] as Type).Typename + " ");
                         if (arg["@optional"] != null) stream.Write("?");
-                        if (arg["@repeat"] != null) stream.Write("+");
-                        stream.Write(arg["@name"] + ", ");
+                        if (arg["@repeat"] != null) stream.Write("+"); 
+                        if (arg["@lazy"] != null) stream.Write("*");
+                        stream.Write(arg["@name"] + "  ");
+                        if (arg["@mutator"] != null) Engine.SerializeCode(stream, arg["@mutator"] as ScriptObject);
+                        stream.Write("\n");
                     }
                     stream.Write("\nBody: ");
                     if (obj["@function-body"] is ScriptObject)
@@ -119,7 +123,8 @@ namespace MISP
                         stream.Write("System");
                     stream.Write("\n");
                     return stream.ToString();
-                }, "function func");
+                },
+                Arguments.Arg("func"));
 
             mispEngine.AddFunction("emitfl", "Emit a list of functions",
                 (context, arguments) =>
@@ -140,7 +145,7 @@ namespace MISP
                 mispEngine.SerializeEnvironment(file, context.Scope);
                 file.Close();
                 return true;
-            }, "string file");
+            }, Arguments.Arg("file"));
 
             mispEngine.AddFunction("load-environment", "", (context, arguments) =>
             {
@@ -170,7 +175,7 @@ namespace MISP
                     Write(MISP.Console.PrettyPrint2(newConsole.mispContext.errorObject, 0));
                     return false;
                 }
-            }, "string file");
+            }, Arguments.Arg("file"));
         }
 
         public void Execute(String str)

@@ -26,6 +26,31 @@ namespace MISP
             }
         }
 
+        private void evaluateNodeChild(bool callFunction, Object child, ScriptList arguments, Context context)
+        {
+            bool lazyArgument = false;
+            var prefix = (child as ScriptObject).gsp("@prefix");
+
+            if (callFunction && arguments.Count > 0 && (Function.IsFunction(arguments[0] as ScriptObject)))
+            {
+                var argumentInfo = Function.GetArgumentInfo(arguments[0] as ScriptObject, context, arguments.Count - 1);
+                if (context.evaluationState == EvaluationState.UnwindingError) return;
+                lazyArgument = argumentInfo["@lazy"] != null;
+            }
+
+            if (lazyArgument && prefix != ":" && prefix != "#")
+                arguments.Add(child);
+            else
+            {
+                var argument = Evaluate(context, child);
+                if (context.evaluationState == EvaluationState.UnwindingError) return;
+                if (prefix == "$" && argument is ScriptList)
+                    arguments.AddRange(argument as ScriptList);
+                else
+                    arguments.Add(argument);
+            }
+        }
+
         public Object Evaluate(
             Context context,
             Object what,
@@ -160,73 +185,15 @@ namespace MISP
                         var arguments = new ScriptList();
 
                         foreach (var child in node._children)
+                        {
+                            evaluateNodeChild(eval, child, arguments, context);
+                            if (context.evaluationState == EvaluationState.UnwindingError)
                             {
-                                bool argumentProcessed = false;
-
-                                if (eval && arguments.Count > 0 && (Function.IsFunction(arguments[0] as ScriptObject))) 
-                                    //This is a function call
-                                {
-                                    var prefix = (child as ScriptObject).gsp("@prefix");
-                                    var func = arguments[0] as ScriptObject;
-                                    var argumentInfo = Function.GetArgumentInfo(func, context, arguments.Count - 1);
-                                    if (context.evaluationState == EvaluationState.UnwindingError)
-                                    { context.callDepth -= 1; return null; }
-                                    if ((argumentInfo["@type"] as Type).Typename == "IDENTIFIER")
-                                    {
-                                        var childType = (child as ScriptObject).gsp("@type");
-                                        if (childType == "token" && String.IsNullOrEmpty(prefix))
-                                        {
-                                            arguments.Add((child as ScriptObject).gsp("@token"));
-                                            argumentProcessed = true;
-                                        }
-                                    }
-                                    else if ((argumentInfo["@type"] as Type).Typename == "CODE")
-                                    {
-                                        if (prefix == ":" || prefix == "#")
-                                        {
-                                            //Some prefixs override special behavior of code type.
-                                            arguments.Add(Evaluate(context, child, true));
-                                            if (context.evaluationState == EvaluationState.UnwindingError)
-                                            {
-                                                context.PushStackTrace("Arg for: " + func.gsp("@name"));
-                                                return null;
-                                            }
-                                        }
-                                        else if (prefix == "*" || String.IsNullOrEmpty(prefix))
-                                            arguments.Add(child);
-                                        else if (prefix == "^")
-                                        {
-                                            //raise warning
-                                            arguments.Add(child);
-                                        }
-                                        else
-                                        {
-                                            context.RaiseNewError("Prefix invalid in this context.", child as ScriptObject);
-                                            context.PushStackTrace("Arg for: " + func["@name"]);
-                                            { context.callDepth -= 1; return null; }
-                                        }
-                                        argumentProcessed = true;
-                                    }
-                                }
-
-                                if (!argumentProcessed)
-                                {
-                                    var argument = Evaluate(context, child);
-                                    if (context.evaluationState == EvaluationState.UnwindingError)
-                                            {
-                                                context.PushStackTrace("Arg for: " + 
-                                                    ((arguments.Count > 0 && 
-                                                        Function.IsFunction(arguments[0] as ScriptObject)) ? 
-                                                            (arguments[0] as ScriptObject)["@name"] : "non-func"));
-                                                { context.callDepth -= 1; return null; }
-                                            }
-                                    if ((child as ScriptObject).gsp("@prefix") == "$" && argument is ScriptList)
-                                        arguments.AddRange(argument as ScriptList);
-                                    else
-                                        arguments.Add(argument);
-                                }
+                                context.callDepth -= 1;
+                                return null;
                             }
-                        
+                        }
+
                         if (node.gsp("@prefix") == "^") result = arguments;
                         else
                         {

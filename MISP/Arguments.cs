@@ -7,13 +7,74 @@ namespace MISP
 {
     public class Arguments
     {
-        public static ScriptList ParseArguments(Engine engine, params String[] args)
+        //public static ScriptList ParseArguments(Engine engine, params String[] args)
+        //{
+        //    var list = new ScriptList();
+        //    foreach (var arg in args) list.Add(arg);
+        //    return ParseArguments(engine, list);
+        //}
+
+        public static ScriptObject Arg(String name)
         {
-            var list = new ScriptList();
-            foreach (var arg in args) list.Add(arg);
-            return ParseArguments(engine, list);
+            return new GenericScriptObject(
+                "@name", name
+            );
         }
 
+        public static ScriptObject Optional(String name)
+        {
+            return new GenericScriptObject(
+                "@name", name,
+                "@optional", true
+                );
+        }
+
+        public static ScriptObject Optional(ScriptObject arg)
+        {
+            arg["@optional"] = true;
+            return arg;
+        }
+
+        public static ScriptObject Repeat(String name)
+        {
+            return new GenericScriptObject(
+                "@name", name,
+                "@repeat", true
+                );
+        }
+
+        public static ScriptObject Repeat(ScriptObject arg)
+        {
+            arg["@repeat"] = true;
+            return arg;
+        }
+
+        public static ScriptObject Lazy(String name)
+        {
+            return new GenericScriptObject(
+                "@name", name,
+                "@lazy", true
+                );
+        }
+
+        public static ScriptObject Lazy(ScriptObject arg)
+        {
+            arg["@lazy"] = true;
+            return arg;
+        }
+
+        public static ScriptList Args(params Object[] objs)
+        {
+            return new ScriptList(objs);
+        }
+
+        public static ScriptObject Mutator(ScriptObject arg, String code)
+        {
+            arg["@mutator"] = Parser.ParseRoot(code, "");
+            return arg;
+        }
+
+        /*
         public static ScriptList ParseArguments(Engine engine, ScriptList args)
         {
             var r = new ScriptList();
@@ -66,5 +127,6 @@ namespace MISP
 
             return r;
         }
+         * */
     }
 }

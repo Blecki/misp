@@ -156,18 +156,36 @@ namespace MISP
             to.Write("))\n");
         }
 
+        private static void emitArgumentSpec(ScriptObject arg, System.IO.TextWriter to)
+        {
+            if (arg["@mutator"] == null && arg["@optional"] == null && arg["@repeat"] == null && arg["@lazy"] == null)
+            {
+                to.Write("(arg " + arg["@name"] + ")");
+                return;
+            }
+
+            if (arg["@mutator"] != null) to.Write("(arg-mutator ");
+            if (arg["@optional"] != null) to.Write("(arg-optional ");
+            if (arg["@repeat"] != null) to.Write("(arg-repeat ");
+            if (arg["@lazy"] != null) to.Write("(arg-lazy ");
+            to.Write(arg["@name"]);
+            if (arg["@lazy"] != null) to.Write(")");
+            if (arg["@repeat"] != null) to.Write(")");
+            if (arg["@optional"] != null) to.Write(")");
+            if (arg["@mutator"] != null)
+            {
+                to.Write(" ");
+                SerializeCode(to, arg["@mutator"] as ScriptObject);
+                to.Write(")");
+            }
+        }
+
         public void EmitFunction(ScriptObject func, string type, System.IO.TextWriter to)
         {
-            to.Write("(" + type + " \"" + func.gsp("@name") + "\" (");
+            to.Write("(" + type + " " + func.gsp("@name") + " ^(");
             var arguments = func["@arguments"] as ScriptList;
-            foreach (var arg_ in arguments)
-            {
-                var arg = arg_ as ScriptObject;
-                to.Write("\"" + (arg["@type"] as Type).Typename + " ");
-                if (arg["@optional"] != null) to.Write("?");
-                if (arg["@repeat"] != null) to.Write("+");
-                to.Write(arg.gsp("name") + "\" ");
-            }
+            foreach (var arg in arguments)
+                emitArgumentSpec(arg as ScriptObject, to);
             to.Write(") ");
             Engine.SerializeCode(to, func["@function-body"] as ScriptObject);
             to.Write(" " + func.gsp("@help") + ")\n");

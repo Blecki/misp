@@ -9,6 +9,7 @@ namespace MISP
     {
         private void SetupStringFunctions()
         {
+            /*
             functions.Add("substr", Function.MakeSystemFunction("substr",
                 Arguments.ParseArguments(this, "value", "integer start", "integer ?count"),
                 "string start ?count: returns sub-string of string starting at start.",
@@ -93,7 +94,7 @@ namespace MISP
                 }
                 return r;
             }, "string text");
-
+            */
         }
     }
 }

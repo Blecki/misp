@@ -76,44 +76,6 @@ namespace MISP
         }
     }
 
-    public class ReflectionScriptObject : ScriptObject
-    {
-        override public object GetProperty(string name)
-        {
-            var field = this.GetType().GetField(name);
-            if (field != null) return field.GetValue(this);
-            return null;
-        }
-
-        public override object GetLocalProperty(string name)
-        {
-            return GetProperty(name);
-        }
-
-        override public void DeleteProperty(String name)
-        {
-            throw new ScriptError("Properties cannot be removed from objects of type " + this.GetType().Name + ".", null);
-        }
-
-        override public void SetProperty(string name, object value)
-        {
-            var field = this.GetType().GetField(name);
-            if (field != null)
-            {
-                if (field.FieldType == typeof(bool))
-                    field.SetValue(this, (value != null));
-                else
-                    field.SetValue(this, value);
-            }
-            else throw new ScriptError("Field does not exist on " + this.GetType().Name + ".", null);
-        }
-
-        override public ScriptList ListProperties()
-        {
-            return new ScriptList(this.GetType().GetFields().Select((info) => { return info.Name; }));
-        }
-    }
-
     public class ExtendableReflectionScriptObject : ScriptObject
     {
         private Dictionary<String, Object> properties = new Dictionary<string, object>();

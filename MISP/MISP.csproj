@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="Context.cs" />
     <Compile Include="Console.cs" />
+    <Compile Include="CachedReflectionScriptObject.cs" />
     <Compile Include="Evaluate.cs" />
     <Compile Include="Serialization.cs" />
     <Compile Include="Function.cs" />

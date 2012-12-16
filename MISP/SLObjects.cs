@@ -49,18 +49,27 @@ namespace MISP
             AddFunction("set", "Set a member on an object.",
                 (context, arguments) =>
                 {
-                    try
+                    if (arguments[0] == null) return arguments[2];
+                    if (arguments[0] is ScriptObject)
                     {
-                        (arguments[0] as ScriptObject)[ScriptObject.AsString(arguments[1])] = arguments[2];
+                        try
+                        {
+                            (arguments[0] as ScriptObject)[ScriptObject.AsString(arguments[1])] = arguments[2];
+                        }
+                        catch (Exception e)
+                        {
+                            context.RaiseNewError("System Exception: " + e.Message, context.currentNode);
+                        }
                     }
-                    catch (Exception e)
+                    else
                     {
-                        context.RaiseNewError("System Exception: " + e.Message, context.currentNode);
+                        var field = arguments[0].GetType().GetField(ScriptObject.AsString(arguments[1]));
+                        if (field != null) field.SetValue(arguments[0], arguments[2]);
                     }
                     return arguments[2];
                 },
                 Arguments.Arg("object"),
-                Arguments.Arg("property-name"),
+                Arguments.Mutator(Arguments.Lazy("name"), "(@identifier-if-token value)"),
                 Arguments.Arg("value"));
 
             AddFunction("multi-set", "Set multiple members of an object.",

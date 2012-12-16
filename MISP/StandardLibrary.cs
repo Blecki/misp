@@ -64,7 +64,7 @@ namespace MISP
                     return ScriptObject.AsString(Evaluate(context, arg, true));
                 }, Arguments.Arg("arg"));
 
-            AddFunction("@identifier-if-token", "Mutates a lazy argument. If it's a token, return as a string. If not, evaluate and return as a string.",
+            AddFunction("@identifier-if-token", "Mutates a lazy argument. If it's a token, return as a string. If not, evaluate and return.",
                (context, arguments) =>
                {
                    var arg = arguments[0] as ScriptObject;
@@ -167,6 +167,8 @@ namespace MISP
                 },
                     Arguments.Lazy("good"),
                     Arguments.Lazy("bad"));
+
+            
 
             SetupVariableFunctions();
             SetupObjectFunctions();

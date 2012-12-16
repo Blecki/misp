@@ -6,6 +6,14 @@ using MISP;
 
 namespace MISPConsole
 {
+    class RefTest
+    {
+        public bool test(string f)
+        {
+            return true;
+        }
+    }
+
     class Program
     {
 	    static void Main(string[] args)
@@ -14,6 +22,7 @@ namespace MISPConsole
             System.Console.ForegroundColor = ConsoleColor.Green;
 
             MISP.Console console = new MISP.Console((s) => { System.Console.Write(s); });
+            console.mispEngine.AddFunction("make-reftest", "", (context, arguments) => { return new RefTest(); });
 
             if (args.Length > 0)
             {

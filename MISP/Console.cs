@@ -135,6 +135,22 @@ namespace MISP
                             + ": " + item.Value.gsp("@help") + "\n");
                     return stream.ToString();
                 });
+
+            mispEngine.AddFunction("reflect", "Examine an object using .net reflection.",
+                (context, arguments) =>
+                {
+                    var stream = new System.IO.StringWriter();
+                    if (arguments[0] == null) stream.Write("null\n");
+                    else
+                    {
+                        stream.Write(arguments[0].GetType().Name + "\n");
+                        foreach (var field in arguments[0].GetType().GetFields())
+                            stream.Write("field: " + field.Name + " " + field.FieldType.Name + "\n");
+                        foreach (var method in arguments[0].GetType().GetMethods())
+                            stream.Write("method: " + method.Name + " " + method.ReturnType.Name + "\n");
+                    }
+                    return stream.ToString();
+                }, Arguments.Arg("object"));
         }
 
         private void SetupEnvironmentFunctions()

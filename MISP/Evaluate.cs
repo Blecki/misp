@@ -169,7 +169,33 @@ namespace MISP
                             }
                         }
                         else
-                            result = null;
+                        {
+                            var field = lhs.GetType().GetField(ScriptObject.AsString(rhs));
+                            if (field != null)
+                                result = field.GetValue(lhs);
+                            else
+                            {
+                                var prop = lhs.GetType().GetProperty(ScriptObject.AsString(rhs));
+                                if (prop != null)
+                                    result = prop.GetValue(rhs, null);
+                                else
+                                {
+                                    var func = lhs.GetType().GetMethod(ScriptObject.AsString(rhs));
+                                    if (func != null)
+                                    {
+                                        result = Function.MakeSystemFunction(ScriptObject.AsString(rhs),
+                                            Arguments.Args(Arguments.Optional(Arguments.Repeat("arg"))),
+                                            "Auto-bound function",
+                                            (_context, arguments) =>
+                                            {
+                                                return func.Invoke(lhs, (arguments[0] as ScriptList).ToArray());
+                                            });
+                                    }
+                                    else
+                                        result = null;
+                                }
+                            }
+                        }
                     }
             else if (type == "node")
                     {

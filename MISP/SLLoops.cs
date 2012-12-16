@@ -25,32 +25,32 @@ namespace MISP
                     context.Scope.PopVariable(vName);
                     return result;
                 },
-                Arguments.Arg("variable-name"),
+                Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
                 Arguments.Mutator(Arguments.Arg("in"), "(@list value)"),
                 Arguments.Lazy("code"));
 
             AddFunction("mapi", "Like map, except the variable will hold the index.",
-    (context, arguments) =>
-    {
-        var vName = ArgumentType<String>(arguments[0]);
-        var list = ArgumentType<ScriptList>(arguments[1]);
-        var code = ArgumentType<ScriptObject>(arguments[2]);
-        var result = new ScriptList();
-        context.Scope.PushVariable(vName, null);
-        for (int i = 0; i < list.Count; ++i)
-        {
-            context.Scope.ChangeVariable(vName, i);
-            result.Add(Evaluate(context, code, true));
-        }
-        context.Scope.PopVariable(vName);
-        return result;
-    },
-    Arguments.Arg("variable-name"),
-    Arguments.Mutator(Arguments.Arg("in"), "(@list value)"),
-    Arguments.Lazy("code"));
+                (context, arguments) =>
+                {
+                    var vName = ArgumentType<String>(arguments[0]);
+                    var list = ArgumentType<ScriptList>(arguments[1]);
+                    var code = ArgumentType<ScriptObject>(arguments[2]);
+                    var result = new ScriptList();
+                    context.Scope.PushVariable(vName, null);
+                    for (int i = 0; i < list.Count; ++i)
+                    {
+                        context.Scope.ChangeVariable(vName, i);
+                        result.Add(Evaluate(context, code, true));
+                    }
+                    context.Scope.PopVariable(vName);
+                    return result;
+                },
+                Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
+                Arguments.Mutator(Arguments.Arg("in"), "(@list value)"),
+                Arguments.Lazy("code"));
 
-            
-            AddFunction("mapex", 
+
+            AddFunction("mapex",
                 "variable_name start code next : Like map, but the next element is the result of 'next'. Stops when next = null.",
                 (context, arguments) =>
                 {
@@ -71,12 +71,12 @@ namespace MISP
                     context.Scope.PopVariable(vName);
                     return result;
                 },
-                Arguments.Arg("variable-name"),
+                Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
                 Arguments.Arg("start"),
                 Arguments.Lazy("code"),
                 Arguments.Lazy("next"));
 
-            AddFunction("for", 
+            AddFunction("for",
                 "variable_name list code : Execute code for each item in list. Returns result of last run of code.",
                 (context, arguments) =>
                 {
@@ -95,11 +95,11 @@ namespace MISP
 
                     return result;
                 },
-                Arguments.Arg("variable-name"),
+                Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
                 Arguments.Mutator(Arguments.Arg("list"), "(@list value)"),
                 Arguments.Lazy("code"));
 
-            AddFunction("while", 
+            AddFunction("while",
                 "condition code : Repeat code while condition evaluates to true.",
                 (context, arguments) =>
                 {
@@ -112,7 +112,7 @@ namespace MISP
                 },
                 Arguments.Lazy("condition"),
                 Arguments.Lazy("code"));
-            
+
         }
     }
 }

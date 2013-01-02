@@ -86,6 +86,12 @@ namespace MISP
             }
         }
 
+        public Context(ScriptObject obj)
+        {
+            Reset();
+            foreach (var name in obj.ListProperties())
+                Scope.PushVariable(name as String, obj.GetLocalProperty(name as String));
+        }
 
         public Scope Scope { get { return scopeStack.Count > 0 ? scopeStack[scopeStack.Count - 1] : null; } }
 

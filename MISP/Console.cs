@@ -6,11 +6,28 @@ using MISP;
 
 namespace MISP
 {
+    public class Environment
+    {
+        public Engine engine;
+        public Context context;
+    }
+
     public class Console
     {
         public Action<String> Write = (s) => { };
-        public Engine mispEngine;
-        public Context mispContext;
+        public Dictionary<String, Environment> environments = new Dictionary<string, Environment>();
+        public Environment environment;
+
+        public void AddEnvironment(String name, Engine engine, Context context)
+        {
+            environments.Upsert(name, new Environment { engine = engine, context = context });
+            SetupStandardConsoleFunctions(engine);
+        }
+
+        public void RemoveEnvironment(String name)
+        {
+            environments.Remove(name);
+        }
 
         public void PrettyPrint(Object what, int depth)
         {
@@ -70,13 +87,15 @@ namespace MISP
         {
             this.Write = Write;
             Setup();
-            if (AddEnvironmentFunctions) SetupEnvironmentFunctions();
+            if (AddEnvironmentFunctions) SetupEnvironmentFunctions(environment.engine);
         }
 
         public void Setup()
         {
-            mispEngine = new Engine();
-            mispContext = new Context();
+            var mispEngine = new Engine();
+            var mispContext = new Context();
+            AddEnvironment("console", mispEngine, mispContext);
+            this.environment = environments["console"];
             mispContext.limitExecutionTime = false;
  
             Write("MISP Console 1.0\n");
@@ -88,7 +107,10 @@ namespace MISP
                     return mispEngine.EvaluateString(context, text, ScriptObject.AsString(arguments[0]), false);
                 },
                 Arguments.Arg("name"));
+        }
 
+        public void SetupStandardConsoleFunctions(Engine mispEngine)
+        {
             mispEngine.AddFunction("print", "Print something.",
                 (context, arguments) =>
                 {
@@ -153,7 +175,7 @@ namespace MISP
                 }, Arguments.Arg("object"));
         }
 
-        private void SetupEnvironmentFunctions()
+        private void SetupEnvironmentFunctions(Engine mispEngine)
         {
             mispEngine.AddFunction("save-environment", "", (context, arguments) =>
             {
@@ -167,28 +189,28 @@ namespace MISP
             {
                 var file = System.IO.File.ReadAllText(arguments[0].ToString());
                 var newConsole = new MISP.Console((s) => { System.Console.Write(s); }, false);
-                newConsole.mispContext.ResetTimer();
-                newConsole.mispContext.evaluationState = EvaluationState.Normal;
-                var result = newConsole.mispEngine.EvaluateString(newConsole.mispContext, file, arguments[0].ToString());
+                newConsole.environment.context.ResetTimer();
+                newConsole.environment.context.evaluationState = EvaluationState.Normal;
+                var result = newConsole.environment.engine.EvaluateString(newConsole.environment.context, file, arguments[0].ToString());
                 var scope = new Scope();
                 foreach (var memberName in (result as ScriptObject).ListProperties())
                 {
                     var value = (result as ScriptObject).GetLocalProperty(memberName as String);
                     scope.PushVariable(memberName as String, value);
                 }
-                if (newConsole.mispContext.evaluationState == EvaluationState.Normal)
+                if (newConsole.environment.context.evaluationState == EvaluationState.Normal)
                 {
-                    mispContext = newConsole.mispContext;
-                    mispContext.ReplaceScope(scope);
-                    mispEngine = newConsole.mispEngine;
-                    SetupEnvironmentFunctions();
+                    environment.context = newConsole.environment.context;
+                    environment.context.ReplaceScope(scope);
+                    mispEngine = newConsole.environment.engine;
+                    SetupEnvironmentFunctions(environment.engine);
                     Write("Loaded.\n");
                     return true;
                 }
                 else
                 {
                     Write("Error:\n");
-                    Write(MISP.Console.PrettyPrint2(newConsole.mispContext.errorObject, 0));
+                    Write(MISP.Console.PrettyPrint2(newConsole.environment.context.errorObject, 0));
                     return false;
                 }
             }, Arguments.Arg("file"));
@@ -198,21 +220,21 @@ namespace MISP
         {
             try
             {
-                mispContext.ResetTimer();
-                mispContext.evaluationState = EvaluationState.Normal;
-                var result = mispEngine.EvaluateString(mispContext, str, "");
+                environment.context.ResetTimer();
+                environment.context.evaluationState = EvaluationState.Normal;
+                var result = environment.engine.EvaluateString(environment.context, str, "");
 
-                if (mispContext.evaluationState == EvaluationState.Normal)
+                if (environment.context.evaluationState == EvaluationState.Normal)
                 {
                     Write(MISP.Console.PrettyPrint2(result, 0) + "\n");
                 }
                 else
                 {
                     Write("Error:\n");
-                    Write(MISP.Console.PrettyPrint2(mispContext.errorObject, 0));
+                    Write(MISP.Console.PrettyPrint2(environment.context.errorObject, 0));
                 }
 
-                if (!mispContext.CheckScope())
+                if (!environment.context.CheckScope())
                 {
                     Write("Error: Scopes not properly cleaned.\n");
                 }

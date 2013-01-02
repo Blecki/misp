@@ -22,7 +22,7 @@ namespace MISPConsole
             System.Console.ForegroundColor = ConsoleColor.Green;
 
             MISP.Console console = new MISP.Console((s) => { System.Console.Write(s); });
-            console.mispEngine.AddFunction("make-reftest", "", (context, arguments) => { return new RefTest(); });
+            console.environment.engine.AddFunction("make-reftest", "", (context, arguments) => { return new RefTest(); });
 
             if (args.Length > 0)
             {
@@ -44,11 +44,11 @@ namespace MISPConsole
                         try
                         {
                             var time = Convert.ToSingle(command.Substring(7));
-                            console.mispContext.allowedExecutionTime = TimeSpan.FromSeconds(time);
-                            console.mispContext.limitExecutionTime = time > 0;
+                            console.environment.context.allowedExecutionTime = TimeSpan.FromSeconds(time);
+                            console.environment.context.limitExecutionTime = time > 0;
 
-                            if (console.mispContext.limitExecutionTime)
-                                System.Console.Write("Execution time limit set to " + console.mispContext.allowedExecutionTime + "\n");
+                            if (console.environment.context.limitExecutionTime)
+                                System.Console.Write("Execution time limit set to " + console.environment.context.allowedExecutionTime + "\n");
                             else
                                 System.Console.Write("Execution time limit disabled.\n");
                         }

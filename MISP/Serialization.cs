@@ -7,6 +7,12 @@ namespace MISP
 {
     public partial class Engine
     {
+        public static Action<String> ReportSerializationError = null;
+        private static void _serializationError(String msg)
+        {
+            if (ReportSerializationError != null) ReportSerializationError(msg);
+        }
+
         private class ObjectRecord
         {
             internal ScriptObject obj;
@@ -78,13 +84,14 @@ namespace MISP
             Object value,
             List<ScriptObject> globalFunctions,
             List<ObjectRecord> objects,
-            List<ObjectRecord> lambdas)
+            List<ObjectRecord> lambdas,
+            int depth)
         {
 
             if (value == null) to.Write("null");
             else if (value is ScriptObject)
             {
-                if (Function.IsSystemFunction(value as ScriptObject) || 
+                if (Function.IsSystemFunction(value as ScriptObject) ||
                     globalFunctions.Contains(value)) to.Write((value as ScriptObject).gsp("@name"));
                 else
                 {
@@ -95,7 +102,7 @@ namespace MISP
                         index = IndexIn(value as ScriptObject, lambdas);
                         if (index != -1) to.Write("(index lambdas " + index + ")");
                         else
-                            EmitObject(to, value as ScriptObject, globalFunctions, objects, lambdas);
+                            EmitObject(to, value as ScriptObject, globalFunctions, objects, lambdas, depth);
                     }
                 }
             }
@@ -106,13 +113,24 @@ namespace MISP
                 to.Write("^(");
                 foreach (var item in value as ScriptList)
                 {
-                    EmitObjectProperty(to, item, globalFunctions, objects, lambdas);
+                    EmitObjectProperty(to, item, globalFunctions, objects, lambdas, depth + 1);
                     to.Write(" ");
                 }
                 to.Write(")");
             }
-            else
+            else if (value is Int32)
                 to.Write(value.ToString());
+            else if (value is UInt32)
+                to.Write(value.ToString());
+            else if (value is Single)
+                to.Write(value.ToString());
+            else if (value is IScriptSerializable)
+                to.Write((value as IScriptSerializable).Serialize());
+            else
+            {
+                _serializationError("Encountered unserializable type: " + value.GetType().Name);
+                to.Write("null");
+            }
         }
 
         private static void EmitObjectProperties(
@@ -120,14 +138,15 @@ namespace MISP
             ScriptObject obj,
             List<ScriptObject> globalFunctions,
             List<ObjectRecord> objects,
-            List<ObjectRecord> lambdas)
+            List<ObjectRecord> lambdas,
+            int depth)
         {
             foreach (var propertyName in obj.ListProperties())
             {
-                to.Write("^(\"" + propertyName as String + "\" ");
+                to.Write("\n" + new String(' ', depth * 3) + "(" + propertyName as String + " ");
                 var value = obj.GetLocalProperty(propertyName as String);
-                EmitObjectProperty(to, value, globalFunctions, objects, lambdas);
-                to.Write(")\n");
+                EmitObjectProperty(to, value, globalFunctions, objects, lambdas, depth);
+                to.Write(")");
             }
         }
 
@@ -136,11 +155,12 @@ namespace MISP
             ScriptObject obj,
             List<ScriptObject> globalFunctions,
             List<ObjectRecord> objects,
-            List<ObjectRecord> lambdas)
+            List<ObjectRecord> lambdas,
+            int depth)
         {
             to.WriteLine("(record ");
-            EmitObjectProperties(to, obj, globalFunctions, objects, lambdas);
-            to.Write(")\n");
+            EmitObjectProperties(to, obj, globalFunctions, objects, lambdas, depth + 1);
+            to.Write(")");
         }
 
         private static void EmitObjectRoot(
@@ -151,9 +171,9 @@ namespace MISP
             List<ObjectRecord> lambdas)
         {
             var index = IndexIn(obj, objects);
-            to.WriteLine("(multi-set (index objects " + index + ") ^(");
-            EmitObjectProperties(to, obj, globalFunctions, objects, lambdas);
-            to.Write("))\n");
+            to.WriteLine("(multi-set (index objects " + index + ") ");
+            EmitObjectProperties(to, obj, globalFunctions, objects, lambdas, 1);
+            to.Write(")\n");
         }
 
         private static void emitArgumentSpec(ScriptObject arg, System.IO.TextWriter to)
@@ -180,15 +200,20 @@ namespace MISP
             }
         }
 
-        public void EmitFunction(ScriptObject func, string type, System.IO.TextWriter to)
+        public void EmitFunction(ScriptObject func, string type, System.IO.TextWriter to, bool recall = false, int indent = -1)
         {
-            to.Write("(" + type + " " + func.gsp("@name") + " ^(");
+            to.Write((recall ?  "" : "(") + type + " " + func.gsp("@name") + " ^(");
             var arguments = func["@arguments"] as ScriptList;
             foreach (var arg in arguments)
+            {
+                if (indent >= 0) to.Write("\n   ");
                 emitArgumentSpec(arg as ScriptObject, to);
+            }
+            if (indent >= 0) to.Write("\n");
             to.Write(") ");
-            Engine.SerializeCode(to, func["@function-body"] as ScriptObject);
-            to.Write(" " + func.gsp("@help") + ")\n");
+            Engine.SerializeCode(to, func["@function-body"] as ScriptObject, indent);
+            if (!recall)
+                to.Write((indent >= 0 ? "\n" : "") + " \"" + func.gsp("@help") + "\")\n");
         }
 
         public void SerializeEnvironment(System.IO.TextWriter to, Scope scope)
@@ -217,14 +242,14 @@ namespace MISP
 
             //Emit global functions
             foreach (var func in globalFunctions)
-                EmitFunction(func, "defun", to);
+                EmitFunction(func, "defun", to, false, 0);
 
             //Create and emit lambda functions.
             to.WriteLine("(let ^(\n   ^(\"lambdas\" ^(");
             foreach (var func in lambdas)
             {
                 to.Write("      ");
-                EmitFunction(func.obj, "lambda", to);
+                EmitFunction(func.obj, "lambda", to, false, 0);
             }
             to.WriteLine(")\n   )\n   ^(\"objects\" (array " + objects.Count + " (record)))\n)\n(lastarg\n");
 
@@ -232,7 +257,7 @@ namespace MISP
             foreach (var func in globalFunctions)
             {
                 to.WriteLine("(set " + func.gsp("@name") + " \"@declaration-scope\" ");
-                EmitObjectProperty(to, func["@declaration-scope"], globalFunctions, objects, lambdas);
+                EmitObjectProperty(to, func["@declaration-scope"], globalFunctions, objects, lambdas, 1);
                 to.WriteLine(")\n");
             }
 
@@ -240,7 +265,7 @@ namespace MISP
             {
                 var func = lambdas[i];
                 to.WriteLine("(set (index lambdas " + i + ") \"@declaration-scope\" ");
-                EmitObjectProperty(to, func.obj["@declaration-scope"], globalFunctions, objects, lambdas);
+                EmitObjectProperty(to, func.obj["@declaration-scope"], globalFunctions, objects, lambdas, 1);
                 to.WriteLine(")\n");
             }
             //Emit remaining objects

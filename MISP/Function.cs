@@ -25,8 +25,17 @@ public static ScriptObject MakeFunction(
             ScriptList arguments,
             String help,
             ScriptObject body,
-            ScriptObject declarationScope)
+            ScriptObject declarationScope,
+            bool copyScope = false)
         {
+            if (copyScope)
+            {
+                var newScope = new Scope();
+                foreach (var prop in declarationScope.ListProperties())
+                    newScope.PushVariable(prop as String, declarationScope.GetLocalProperty(prop as String));
+                declarationScope = newScope;
+            }
+
             return new GenericScriptObject(
                 "@name", name,
                 "@arguments", arguments,
@@ -99,7 +108,8 @@ public static ScriptObject MakeFunction(
                 for (int i = 0; i < argumentInfo.Count; ++i)
                 {
                     var info = argumentInfo[i] as ScriptObject;
-
+                    if (info == null) 
+                        throw new ScriptError("Invalid argument descriptor on function object", context.currentNode);
                     if (info["@repeat"] != null)
                     {
                         var list = new ScriptList();

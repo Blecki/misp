@@ -30,7 +30,7 @@ namespace MISP
                     }
                     return arguments[1];
                 },
-                Arguments.Arg("name"),
+                Arguments.Mutator(Arguments.Lazy("name"), "(@identifier value)"),
                 Arguments.Arg("value"));
 
             AddFunction("let",
@@ -46,16 +46,31 @@ namespace MISP
 
                     foreach (var item in variables._children)
                     {
-                        var def = ArgumentType<ScriptList>(Evaluate(context, item));
-                        if (context.evaluationState == EvaluationState.UnwindingError) goto RUN_CLEANUP;
-                        if (def.Count != 2 && def.Count != 3)
+                        var sitem = item as ScriptObject;
+                        if (sitem._children.Count <= 1 || sitem._children.Count > 3)
                         {
-                            context.RaiseNewError("Variable defs to let should have only 2 or 3 items.", context.currentNode);
+                            context.RaiseNewError("Bad variable definition in let", context.currentNode);
                             goto RUN_CLEANUP;
                         }
-                        var name = ArgumentType<String>(def[0]);
-                        context.Scope.PushVariable(name, def[1]);
-                        cleanUp.Add(new LetVariable { name = name, cleanupCode = def.Count == 3 ? def[2] : null });
+
+                        var nameObject = sitem._child(0) as ScriptObject;
+                        var varName = "";
+
+                        if (nameObject.gsp("@type") == "token")
+                            varName = nameObject.gsp("@token");
+                        else
+                            varName = AutoBind.StringArgument(Evaluate(context, nameObject, true));
+                        if (context.evaluationState == EvaluationState.UnwindingError) goto RUN_CLEANUP;
+
+                        var varValue = Evaluate(context, sitem._child(1), false);
+                        if (context.evaluationState == EvaluationState.UnwindingError) goto RUN_CLEANUP;
+
+                        context.Scope.PushVariable(varName, varValue);
+                        cleanUp.Add(new LetVariable
+                        {
+                            name = varName,
+                            cleanupCode = sitem._children.Count == 3 ? sitem._child(2) : null
+                        });
                     }
 
                     result = Evaluate(context, code, true);

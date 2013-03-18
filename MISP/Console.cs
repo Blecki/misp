@@ -10,6 +10,7 @@ namespace MISP
     {
         public Engine engine;
         public Context context;
+        public String name;
     }
 
     public class Console
@@ -17,11 +18,22 @@ namespace MISP
         public Action<String> Write = (s) => { };
         public Dictionary<String, Environment> environments = new Dictionary<string, Environment>();
         public Environment environment;
+        public Action<Engine> SetupHost;
+        public bool noEcho = false;
 
-        public void AddEnvironment(String name, Engine engine, Context context)
+        public Environment AddEnvironment(String name, Engine engine, Context context)
         {
-            environments.Upsert(name, new Environment { engine = engine, context = context });
+            environments.Upsert(name, new Environment { engine = engine, context = context, name = name });
             SetupStandardConsoleFunctions(engine);
+            if (SetupHost != null) SetupHost(engine);
+            engine.AddFunction("run-file", "Load and run a file.",
+                (_context, arguments) =>
+                {
+                    var text = System.IO.File.ReadAllText(ScriptObject.AsString(arguments[0]));
+                    return engine.EvaluateString(_context, text, ScriptObject.AsString(arguments[0]), false);
+                },
+                Arguments.Arg("name"));
+            return environments[name];
         }
 
         public void RemoveEnvironment(String name)
@@ -83,30 +95,45 @@ namespace MISP
         }
 
 
-        public Console(Action<String> Write, bool AddEnvironmentFunctions = true)
+        public Console(Action<String> Write, Action<Engine> SetupHost)
         {
             this.Write = Write;
-            Setup();
-            if (AddEnvironmentFunctions) SetupEnvironmentFunctions(environment.engine);
+            this.SetupHost = SetupHost;
+            SetupNewEnvironment("console");
+            environment = environments["console"];
+            SetupEnvironmentFunctions(environment.engine);
+          
         }
 
-        public void Setup()
+        public void SetupNewEnvironment(String name)
         {
             var mispEngine = new Engine();
             var mispContext = new Context();
-            AddEnvironment("console", mispEngine, mispContext);
-            this.environment = environments["console"];
+            var environment = AddEnvironment(name, mispEngine, mispContext);
             mispContext.limitExecutionTime = false;
  
-            Write("MISP Console 1.0\n");
+            
+        }
 
-            mispEngine.AddFunction("run-file", "Load and run a file.",
-                (context, arguments) =>
+        public static String UnescapeString(String s)
+        {
+            var place = 0;
+            var r = "";
+            while (place < s.Length)
+            {
+                if (s[place] == '\\')
                 {
-                    var text = System.IO.File.ReadAllText(ScriptObject.AsString(arguments[0]));
-                    return mispEngine.EvaluateString(context, text, ScriptObject.AsString(arguments[0]), false);
-                },
-                Arguments.Arg("name"));
+                    if (place < s.Length - 1 && s[place + 1] == 'n')
+                        r += '\n';
+                    place += 2;
+                }
+                else
+                {
+                    r += s[place];
+                    ++place;
+                }
+            }
+            return r;
         }
 
         public void SetupStandardConsoleFunctions(Engine mispEngine)
@@ -114,71 +141,59 @@ namespace MISP
             mispEngine.AddFunction("print", "Print something.",
                 (context, arguments) =>
                 {
+                    noEcho = true;
                     foreach (var item in arguments[0] as ScriptList)
-                        System.Console.Write(MISP.Console.PrettyPrint2(item, 0));
+                        Write(UnescapeString(MISP.Console.PrettyPrint2(item, 0)));
                     return null;
                 }, Arguments.Optional(Arguments.Repeat("value")));
 
-            mispEngine.AddFunction("emitf", "Emit a function",
+            mispEngine.AddFunction("printf", "Print a string with formatting.",
                 (context, arguments) =>
                 {
-                    var stream = new System.IO.StringWriter();
-                    var obj = arguments[0] as ScriptObject;
-                    stream.Write("Name: ");
-                    stream.Write(obj.gsp("@name") + "\nHelp: " + obj.gsp("@help") + "\nArguments: \n");
-                    foreach (var arg_ in obj["@arguments"] as ScriptList)
-                    {
-                        stream.Write("   ");
-                        var arg = arg_ as ScriptObject;
-                        //stream.Write((arg["@type"] as Type).Typename + " ");
-                        if (arg["@optional"] != null) stream.Write("?");
-                        if (arg["@repeat"] != null) stream.Write("+"); 
-                        if (arg["@lazy"] != null) stream.Write("*");
-                        stream.Write(arg["@name"] + "  ");
-                        if (arg["@mutator"] != null) Engine.SerializeCode(stream, arg["@mutator"] as ScriptObject);
-                        stream.Write("\n");
-                    }
-                    stream.Write("\nBody: ");
-                    if (obj["@function-body"] is ScriptObject)
-                        Engine.SerializeCode(stream, obj["@function-body"] as ScriptObject);
-                    else
-                        stream.Write("System");
-                    stream.Write("\n");
-                    return stream.ToString();
+                    noEcho = true;
+                    var s = String.Format(AutoBind.StringArgument(arguments[0]),
+                        AutoBind.ListArgument(arguments[1]).ToArray());
+                    Write(UnescapeString(s));
+                    return null;
                 },
-                Arguments.Arg("func"));
+                Arguments.Arg("format-string"),
+                Arguments.Optional(Arguments.Repeat("value")));
+
 
             mispEngine.AddFunction("emitfl", "Emit a list of functions",
                 (context, arguments) =>
                 {
-                    var stream = new System.IO.StringWriter();
-                    foreach (var item in mispEngine.functions)
-                        stream.Write(item.Value.gsp("@name") + new String(' ', 16 - item.Value.gsp("@name").Length) 
-                            + ": " + item.Value.gsp("@help") + "\n");
-                    return stream.ToString();
-                });
-
-            mispEngine.AddFunction("reflect", "Examine an object using .net reflection.",
-                (context, arguments) =>
-                {
-                    var stream = new System.IO.StringWriter();
-                    if (arguments[0] == null) stream.Write("null\n");
+                    noEcho = true;
+                    if (arguments[0] == null) foreach (var item in mispEngine.functions) EmitFunctionListItem(item.Value);
+                    else if (arguments[0] is String)
+                    {
+                        var regex = new System.Text.RegularExpressions.Regex(arguments[0] as String);
+                        foreach (var item in mispEngine.functions)
+                            if (regex.IsMatch(item.Value.gsp("@name"))) EmitFunctionListItem(item.Value);
+                    }
                     else
                     {
-                        stream.Write(arguments[0].GetType().Name + "\n");
-                        foreach (var field in arguments[0].GetType().GetFields())
-                            stream.Write("field: " + field.Name + " " + field.FieldType.Name + "\n");
-                        foreach (var method in arguments[0].GetType().GetMethods())
-                            stream.Write("method: " + method.Name + " " + method.ReturnType.Name + "\n");
+                        foreach (var item in AutoBind.ListArgument(arguments[0]))
+                            if (item is ScriptObject) EmitFunctionListItem(item as ScriptObject);
                     }
-                    return stream.ToString();
-                }, Arguments.Arg("object"));
+                    return null;
+                }, Arguments.Optional("list"));
+            
+        }
+
+        private void EmitFunctionListItem(ScriptObject item)
+        {
+            Write(item.gsp("@name"));
+            if (item.gsp("@name").Length < 16)
+                Write(new String(' ', 16 - item.gsp("@name").Length));
+            Write(item.gsp("@help") + "\n");
         }
 
         private void SetupEnvironmentFunctions(Engine mispEngine)
         {
             mispEngine.AddFunction("save-environment", "", (context, arguments) =>
             {
+                Engine.ReportSerializationError = (str) => Write(str + "\n");
                 var file = new System.IO.StreamWriter(arguments[0].ToString());
                 mispEngine.SerializeEnvironment(file, context.Scope);
                 file.Close();
@@ -187,46 +202,114 @@ namespace MISP
 
             mispEngine.AddFunction("load-environment", "", (context, arguments) =>
             {
-                var file = System.IO.File.ReadAllText(arguments[0].ToString());
-                var newConsole = new MISP.Console((s) => { System.Console.Write(s); }, false);
-                newConsole.environment.context.ResetTimer();
-                newConsole.environment.context.evaluationState = EvaluationState.Normal;
-                var result = newConsole.environment.engine.EvaluateString(newConsole.environment.context, file, arguments[0].ToString());
-                var scope = new Scope();
-                foreach (var memberName in (result as ScriptObject).ListProperties())
+                var newContext = new Context();
+                var newEngine = new Engine();
+                var result = newEngine.EvaluateString(newContext,
+                    System.IO.File.ReadAllText(arguments[0].ToString()), arguments[0].ToString()) as ScriptObject;
+                
+
+                if (newContext.evaluationState == EvaluationState.Normal)
                 {
-                    var value = (result as ScriptObject).GetLocalProperty(memberName as String);
-                    scope.PushVariable(memberName as String, value);
-                }
-                if (newConsole.environment.context.evaluationState == EvaluationState.Normal)
-                {
-                    environment.context = newConsole.environment.context;
-                    environment.context.ReplaceScope(scope);
-                    mispEngine = newConsole.environment.engine;
-                    SetupEnvironmentFunctions(environment.engine);
+                    var environment = AddEnvironment(arguments[1].ToString(), newEngine, newContext);
+                    if (environment.name == this.environment.name)
+                        this.environment = environment;
+                    SetupEnvironmentFunctions(newEngine);
+                    var scope = new Scope();
+                    foreach (var prop in result.ListProperties())
+                        scope.PushVariable(prop as String, result.GetLocalProperty(prop as String));
+                    newContext.ReplaceScope(scope);
+
                     Write("Loaded.\n");
                     return true;
                 }
                 else
                 {
                     Write("Error:\n");
-                    Write(MISP.Console.PrettyPrint2(newConsole.environment.context.errorObject, 0));
+                    Write(MISP.Console.PrettyPrint2(newContext.errorObject, 0));
                     return false;
                 }
-            }, Arguments.Arg("file"));
+            }, Arguments.Arg("file"), Arguments.Arg("name"));
         }
 
-        public void Execute(String str)
+        public void ExecuteCommand(String str)
+        {
+            try
+            {
+                if (str.StartsWith("\\"))
+                {
+                    if (str.StartsWith("\\limit"))
+                    {
+                            var time = Convert.ToSingle(str.Substring(7));
+                            environment.context.allowedExecutionTime = TimeSpan.FromSeconds(time);
+                            environment.context.limitExecutionTime = time > 0;
+
+                            if (environment.context.limitExecutionTime)
+                                Write("Execution time limit set to " + environment.context.allowedExecutionTime + "\n");
+                            else
+                                Write("Execution time limit disabled.\n");
+                    }
+                    else if (str.StartsWith("\\environments"))
+                    {
+                        Write("Environments:\n");
+                        foreach (var environment in environments)
+                            Write(".." + environment.Key + "\n");
+                    }
+                    else if (str.StartsWith("\\environment"))
+                    {
+                        var environmentName = str.Substring(13);
+                        if (environments.ContainsKey(environmentName))
+                        {
+                            environment = environments[environmentName];
+                            Write("Environment changed to " + environmentName + ".\n");
+                        }
+                        else
+                            Write("No environment with name " + environmentName + ".\n");
+                    }
+                    else Write("I don't understand.\n");
+                }
+                else
+                {
+                    environment.context.ResetTimer();
+                    environment.context.evaluationState = EvaluationState.Normal;
+                    var result = environment.engine.EvaluateString(environment.context, "(" + str + ")", "");
+
+                    if (environment.context.evaluationState == EvaluationState.Normal)
+                    {
+                        if (!noEcho) Write(MISP.Console.PrettyPrint2(result, 0) + "\n");
+                    }
+                    else
+                    {
+                        Write("Error:\n");
+                        Write(MISP.Engine.TightFormat(environment.context.errorObject));
+                    }
+
+                    if (!environment.context.CheckScope())
+                        Write("Error: Scopes not properly cleaned.\n");
+
+
+                    var prompt = environment.context.Scope.GetVariable("@prompt");
+                    if (prompt != null && Function.IsFunction(prompt as ScriptObject))
+                        Function.Invoke(prompt as ScriptObject, environment.engine, environment.context, new ScriptList());
+                    noEcho = false;
+                }
+            }
+            catch (Exception e)
+            {
+                Write(e.Message + "\n");
+            }
+        }
+
+        public void ExecuteCode(ScriptObject obj)
         {
             try
             {
                 environment.context.ResetTimer();
                 environment.context.evaluationState = EvaluationState.Normal;
-                var result = environment.engine.EvaluateString(environment.context, str, "");
+                var result = environment.engine.Evaluate(environment.context, obj, true, false);
 
                 if (environment.context.evaluationState == EvaluationState.Normal)
                 {
-                    Write(MISP.Console.PrettyPrint2(result, 0) + "\n");
+                    if (!noEcho) Write(MISP.Console.PrettyPrint2(result, 0) + "\n");
                 }
                 else
                 {
@@ -235,9 +318,9 @@ namespace MISP
                 }
 
                 if (!environment.context.CheckScope())
-                {
                     Write("Error: Scopes not properly cleaned.\n");
-                }
+
+                noEcho = false;
             }
             catch (Exception e)
             {

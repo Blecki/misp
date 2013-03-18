@@ -14,18 +14,20 @@ namespace MISP
         //    return ParseArguments(engine, list);
         //}
 
-        public static ScriptObject Arg(String name)
-        {
-            return new GenericScriptObject(
-                "@name", name
-            );
-        }
-
-        public static ScriptObject Optional(String name)
+        public static ScriptObject Arg(String name, String help = null)
         {
             return new GenericScriptObject(
                 "@name", name,
-                "@optional", true
+                "@help", help
+            );
+        }
+
+        public static ScriptObject Optional(String name, String help = null)
+        {
+            return new GenericScriptObject(
+                "@name", name,
+                "@optional", true,
+                "@help", help
                 );
         }
 
@@ -35,11 +37,12 @@ namespace MISP
             return arg;
         }
 
-        public static ScriptObject Repeat(String name)
+        public static ScriptObject Repeat(String name, String help = null)
         {
             return new GenericScriptObject(
                 "@name", name,
-                "@repeat", true
+                "@repeat", true,
+                "@help", help
                 );
         }
 
@@ -49,11 +52,12 @@ namespace MISP
             return arg;
         }
 
-        public static ScriptObject Lazy(String name)
+        public static ScriptObject Lazy(String name, String help = null)
         {
             return new GenericScriptObject(
                 "@name", name,
-                "@lazy", true
+                "@lazy", true,
+                "@help", help
                 );
         }
 
@@ -65,7 +69,14 @@ namespace MISP
 
         public static ScriptList Args(params Object[] objs)
         {
-            return new ScriptList(objs);
+            var r = new ScriptList();
+            foreach (var obj in objs)
+            {
+                if (obj is ScriptObject) r.Add(obj);
+                else if (obj is String) r.Add(Arg(obj.ToString()));
+                else throw new InvalidProgramException();
+            }
+            return r;
         }
 
         public static ScriptObject Mutator(ScriptObject arg, String code)

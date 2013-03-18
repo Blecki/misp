@@ -15,6 +15,9 @@ namespace MISP
         }
     }
 
+    public class SuperBrace
+    { }
+
     public class Parser
     {
         public static bool IsWhitespace(char c)
@@ -43,7 +46,7 @@ namespace MISP
         public static ScriptObject ParseToken(ParseState state)
         {
             var result = new GenericScriptObject("@type", "token", "@start", state.start, "@source", state);
-            while (!state.AtEnd() && !(" \t\r\n:.)]".Contains(state.Next()))) state.Advance();
+            while (!state.AtEnd() && !(" \t\r\n:.)]}".Contains(state.Next()))) state.Advance();
             result["@end"] = state.start;
             result["@token"] = state.source.Substring(asInt(result["@start"]),
                 asInt(result["@end"]) - asInt(result["@start"]));
@@ -166,12 +169,7 @@ namespace MISP
         {
             ScriptObject result = null;
             var prefix = ParsePrefix(state);
-            if (state.Next() == '[') //Dictionary Entry
-            {
-                result = ParseNode(state, "[", "]");
-                result["@type"] = "dictionaryentry";
-            }
-            else if (state.Next() == '"')
+            if (state.Next() == '"')
             {
                 result = ParseStringExpression(state);
             }
@@ -187,7 +185,7 @@ namespace MISP
             }
             else
             {
-                if (" \t\r\n:.)]".Contains(state.Next())
+                if (" \t\r\n:.)}".Contains(state.Next())
                     && !String.IsNullOrEmpty(prefix))
                 {
                     //The prefix is a token.
@@ -227,6 +225,8 @@ namespace MISP
             while (!state.MatchNext(end))
             {
                 DevourWhitespace(state);
+                if (state.Next() == '}')
+                    return result; 
                 if (!state.MatchNext(end))
                 {
                     var expression = ParseExpression(state);
@@ -247,7 +247,11 @@ namespace MISP
             int piece_start = state.start;
             while (!state.AtEnd())
             {
-                if (state.Next() == '(') 
+                if (state.Next() == '}' && piece.Length == 0)
+                {
+                    state.Advance(1);
+                }
+                else if (state.Next() == '(') 
                 {
                     if (piece.Length > 0) children(result).Add(
                         new GenericScriptObject("@type", "string", "@start", piece_start, "@source", state,

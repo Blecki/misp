@@ -13,11 +13,15 @@ namespace MISP
         {
             AddFunction("+", "Add values", (context, arguments) =>
                 {
-                    if (arguments[0] == null || arguments[1] == null) return null;
-                    return (dynamic)arguments[0] + (dynamic)arguments[1];
+                    var values = AutoBind.ListArgument(arguments[0]);
+                    if (values.Count == 0) return null;
+                    if (values.Count == 1) return values[0];
+                    var result = (dynamic)values[0];
+                    for (int i = 1; i < values.Count; ++i)
+                        result += (dynamic)values[i];
+                    return result;
                 },
-                Arguments.Arg("A"),
-                Arguments.Arg("B"));
+                Arguments.Repeat("value"));
 
             AddFunction("-", "Subtract values", (context, arguments) =>
             {
@@ -27,14 +31,18 @@ namespace MISP
                 Arguments.Arg("A"),
                 Arguments.Arg("B"));
 
-            AddFunction("*", "Multiply values", (context, arguments) =>
+            AddFunction("*", "Add values", (context, arguments) =>
             {
-                if (arguments[0] == null || arguments[1] == null) return null;
-                return (dynamic)arguments[0] * (dynamic)arguments[1];
+                var values = AutoBind.ListArgument(arguments[0]);
+                if (values.Count == 0) return null;
+                if (values.Count == 1) return values[0];
+                var result = (dynamic)values[0];
+                for (int i = 1; i < values.Count; ++i)
+                    result *= (dynamic)values[i];
+                return result;
             },
-                Arguments.Arg("A"),
-                Arguments.Arg("B"));
-
+                Arguments.Repeat("value")); 
+            
             AddFunction("/", "Divide values", (context, arguments) =>
             {
                 if (arguments[0] == null || arguments[1] == null) return null;

@@ -60,9 +60,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AutoBind.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="Console.cs" />
     <Compile Include="CachedReflectionScriptObject.cs" />
+    <Compile Include="ScriptSerializable.cs" />
+    <Compile Include="SLRegex.cs" />
     <Compile Include="Evaluate.cs" />
     <Compile Include="Serialization.cs" />
     <Compile Include="Function.cs" />

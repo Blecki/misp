@@ -6,14 +6,6 @@ using MISP;
 
 namespace MISPConsole
 {
-    class RefTest
-    {
-        public bool test(string f)
-        {
-            return true;
-        }
-    }
-
     class Program
     {
 	    static void Main(string[] args)
@@ -21,14 +13,16 @@ namespace MISPConsole
             System.Console.Title = MISP.Engine.VERSION;
             System.Console.ForegroundColor = ConsoleColor.Green;
 
-            MISP.Console console = new MISP.Console((s) => { System.Console.Write(s); });
-            console.environment.engine.AddFunction("make-reftest", "", (context, arguments) => { return new RefTest(); });
+            MISP.Console console = new MISP.Console((s) => { System.Console.Write(s); }, null);
 
+            var autoBindTest = MISP.AutoBind.GenerateTypeBinding(typeof(MISP.Engine));
+            console.environment.engine.AddGlobalVariable("Engine", (context) => { return autoBindTest; });
+            
             if (args.Length > 0)
             {
                 var invoke = "(run-file \"" + args[0] + "\")";
                 System.Console.WriteLine(invoke);
-                console.Execute(invoke);
+                console.ExecuteCommand(invoke);
             }
 
             while (true)
@@ -36,33 +30,8 @@ namespace MISPConsole
                 System.Console.Write(":>");
                 var command = System.Console.ReadLine();
                 if (String.IsNullOrEmpty(command)) continue;
-                if (command[0] == '\\')
-                {
-                    if (command.StartsWith("\\q")) return;
-                    else if (command.StartsWith("\\limit"))
-                    {
-                        try
-                        {
-                            var time = Convert.ToSingle(command.Substring(7));
-                            console.environment.context.allowedExecutionTime = TimeSpan.FromSeconds(time);
-                            console.environment.context.limitExecutionTime = time > 0;
-
-                            if (console.environment.context.limitExecutionTime)
-                                System.Console.Write("Execution time limit set to " + console.environment.context.allowedExecutionTime + "\n");
-                            else
-                                System.Console.Write("Execution time limit disabled.\n");
-                        }
-                        catch (Exception e)
-                        {
-                            System.Console.Write("Error: " + e.Message + "\n");
-                        }
-                    }
-                    else System.Console.Write("I don't understand.\n");
-                }
-                else
-                {
-                    console.Execute("(" + command + ")");
-                }
+                
+                    console.ExecuteCommand("(" + command + ")");
             }
         }
     }

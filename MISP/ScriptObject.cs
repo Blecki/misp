@@ -83,7 +83,7 @@ namespace MISP
         {
             var field = this.GetType().GetField(name);
             if (field != null) return field.GetValue(this);
-            if (properties.ContainsKey(name.ToLowerInvariant())) return properties[name.ToLowerInvariant()];
+            if (properties.ContainsKey(name)) return properties[name];
             return null;
         }
 
@@ -94,7 +94,7 @@ namespace MISP
 
         override public void DeleteProperty(String name)
         {
-            if (properties.ContainsKey(name.ToLowerInvariant())) properties.Remove(name.ToLowerInvariant());
+            if (properties.ContainsKey(name)) properties.Remove(name);
             else if (this.GetType().GetField(name) != null)
                 throw new ScriptError("This property cannot be removed from objects of type " + this.GetType().Name + ".", null);
         }
@@ -110,7 +110,7 @@ namespace MISP
                     field.SetValue(this, value);
             }
             else
-                properties.Upsert(name.ToLowerInvariant(), value);
+                properties.Upsert(name, value);
         }
 
         override public ScriptList ListProperties()
@@ -160,26 +160,26 @@ namespace MISP
 
         override public object GetProperty(string name)
         {
-            name = name.ToLowerInvariant();
+            //name = name.ToLowerInvariant();
             if (properties.ContainsKey(name)) return properties[name];
             else return GetInheritedProperty(name, new List<ScriptObject>());
         }
 
         public override object GetLocalProperty(string name)
         {
-            name = name.ToLowerInvariant();
+            //name = name.ToLowerInvariant();
             if (properties.ContainsKey(name)) return properties[name];
             else return null;
         }
 
         override public void SetProperty(string Name, Object Value)
         {
-            properties.Upsert(Name.ToLowerInvariant(), Value);
+            properties.Upsert(Name, Value);
         }
 
         override public void DeleteProperty(String Name)
         {
-            Name = Name.ToLowerInvariant();
+            //Name = Name.ToLowerInvariant();
             if (properties.ContainsKey(Name)) properties.Remove(Name);
         }
 

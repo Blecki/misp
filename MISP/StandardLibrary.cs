@@ -7,9 +7,36 @@ namespace MISP
 {
     public partial class Engine
     {
+        //Designed for emitting binding objects created by Autobind.
+        public static String TightFormat(Object o)
+        {
+            var stream = new System.IO.StringWriter();
+            if (o == null) stream.Write("null\n");
+            else
+            {
+                var obj = o as ScriptObject;
+                if (obj == null) stream.Write("Not a script object.\n");
+                else foreach (var prop in obj.ListProperties())
+                    {
+                        var val = obj.GetProperty(prop.ToString());
+                        stream.Write(prop.ToString() + ": ");
+                        if (val == null) stream.Write("null");
+                        else if (val is ScriptObject && Function.IsFunction(val as ScriptObject))
+                            stream.Write((val as ScriptObject).GetProperty("@help"));
+                        else if (val is ScriptObject && (val as ScriptObject).GetProperty("@lazy-reflection") != null)
+                            stream.Write("lazy bind " + (val as ScriptObject).GetProperty("@lazy-reflection") + " on " +
+                                ((val as ScriptObject).GetProperty("@source-type") as System.Type).Name);
+                        else
+                            stream.Write(val.ToString());
+                        stream.Write("\n");
+                    }
+            }
+            return stream.ToString();
+        }
+
         private void SetupStandardLibrary()
         {
-            
+
             //types.Add("STRING", new TypeString());
             //types.Add("INTEGER", new TypePrimitive(typeof(int), true));
             //types.Add("LIST", new TypeList());
@@ -168,7 +195,79 @@ namespace MISP
                     Arguments.Lazy("good"),
                     Arguments.Lazy("bad"));
 
-            
+            AddFunction("reflect", "Examine an object using .net reflection.",
+                (context, arguments) =>
+                {
+                    var stream = new System.IO.StringWriter();
+                    if (arguments[0] == null) stream.Write("null\n");
+                    else
+                    {
+                        stream.Write(arguments[0].GetType().Name + "\n");
+                        foreach (var field in arguments[0].GetType().GetFields())
+                            stream.Write("field: " + field.Name + " " + field.FieldType.Name + "\n");
+                        foreach (var method in arguments[0].GetType().GetMethods())
+                            stream.Write("method: " + method.Name + " " + method.ReturnType.Name + "\n");
+                    }
+                    return stream.ToString();
+                }, Arguments.Arg("object"));
+
+            AddFunction("lazy-overloads", "Examine all possible overloads of a lazy binding.",
+                (context, arguments) =>
+                {
+                    var binding = arguments[0] as ScriptObject;
+                    var stream = new System.IO.StringWriter();
+                    if (binding.GetProperty("@lazy-reflection") == null) stream.Write("Not a lazy binding object.");
+                    else
+                    {
+                        var sourceType = binding.GetProperty("@source-type") as System.Type;
+                        var methods = sourceType.GetMethods().Where((m) => m.Name == binding.gsp("@lazy-reflection"));
+                        stream.Write("Methods found:\n");
+                        foreach (var method in methods)
+                        {
+                            stream.Write("args: ");
+                            stream.Write(String.Join(" ", method.GetParameters().Select((p) => p.ParameterType.Name)));
+                            stream.Write("\n");
+                        }
+                    }
+                    return stream.ToString();
+                }, Arguments.Arg("object"));
+
+            AddFunction("emitt", "Emit in tight-formatting style.",
+                (context, arguments) =>
+                {
+                    return TightFormat(arguments[0]);
+                }, Arguments.Arg("object", "Meant for use with objects generated via AutoBind."));
+
+            AddFunction("emitf", "Emit a function",
+                (context, arguments) =>
+                {
+                    var stream = new System.IO.StringWriter();
+                    var obj = arguments[0] as ScriptObject;
+                    stream.Write("Name: ");
+                    stream.Write(obj.gsp("@name") + "\nHelp: " + obj.gsp("@help") + "\nArguments: \n");
+                    foreach (var arg_ in obj["@arguments"] as ScriptList)
+                    {
+                        stream.Write("   ");
+                        var arg = arg_ as ScriptObject;
+                        //stream.Write((arg["@type"] as Type).Typename + " ");
+                        if (arg["@optional"] != null) stream.Write("?");
+                        if (arg["@repeat"] != null) stream.Write("+");
+                        if (arg["@lazy"] != null) stream.Write("*");
+                        stream.Write(arg["@name"] + "  ");
+                        if (arg["@mutator"] != null) Engine.SerializeCode(stream, arg["@mutator"] as ScriptObject);
+                        if (arg["@help"] != null) stream.Write(" - " + arg["@help"].ToString());
+                        stream.Write("\n");
+                    }
+                    stream.Write("\nBody: ");
+                    if (obj["@function-body"] is ScriptObject)
+                        Engine.SerializeCode(stream, obj["@function-body"] as ScriptObject);
+                    else
+                        stream.Write("System");
+                    stream.Write("\n");
+                    return stream.ToString();
+                },
+                Arguments.Arg("func", "Must be a function."));
+
 
             SetupVariableFunctions();
             SetupObjectFunctions();
@@ -180,6 +279,7 @@ namespace MISP
             SetupStringFunctions();
             SetupEncryptionFunctions();
             SetupFileFunctions();
+            SetupRegexFunctions();
         }
 
     }

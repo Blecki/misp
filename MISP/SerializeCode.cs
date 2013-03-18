@@ -7,7 +7,7 @@ namespace MISP
 {
     public partial class Engine
     {
-        public static void SerializeCode(System.IO.TextWriter to, ScriptObject root)
+        public static void SerializeCode(System.IO.TextWriter to, ScriptObject root, int indent = -1)
         {
             if (root.gsp("@type") == "string")
                 to.Write(root.gsp("@prefix") + "\"" + root.gsp("@token") + "\"");
@@ -29,7 +29,13 @@ namespace MISP
                 to.Write(root.gsp("@prefix") + "(");
                 foreach (var item in root._children)
                 {
-                    SerializeCode(to, item as ScriptObject);
+                    //if (indent >= 0)
+                    //{
+                    //    to.Write("\n" + new String(' ', indent * 3));
+                    //    SerializeCode(to, item as ScriptObject, indent + 1);
+                    //}
+                    //else
+                        SerializeCode(to, item as ScriptObject);
                     to.Write(" ");
                 }
                 to.Write(")");

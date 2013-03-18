@@ -17,27 +17,27 @@ namespace MISP
             if (HasVariable(name)) ChangeVariable(name, value); 
             else PushVariable(name, value); 
         }
-        public override void DeleteProperty(String name) { if (HasVariable(name)) variables.Remove(name.ToLowerInvariant()); }
+        public override void DeleteProperty(String name) { if (HasVariable(name)) variables.Remove(name); }
         public override ScriptList ListProperties() { return new ScriptList(variables.Select((p) => p.Key)); }
         public override void ClearProperties() { variables.Clear(); }
 
         public bool HasVariable(String name)
         {
-            return variables.ContainsKey(name.ToLowerInvariant());
+            return variables.ContainsKey(name);
         }
 
         public void PushVariable(String name, Object value)
         {
-            name = name.ToLowerInvariant();
+            //name = name.ToLowerInvariant();
             if (!HasVariable(name)) variables.Add(name, new ScriptList());
             variables[name].Add(value);
         }
 
         public void PopVariable(String name)
         {
-            name = name.ToLowerInvariant();
+            //name = name.ToLowerInvariant();
             if (!HasVariable(name)) return;
-            var list = variables[name.ToLowerInvariant()];
+            var list = variables[name];
             list.RemoveAt(list.Count - 1);
             if (list.Count == 0)
                 variables.Remove(name);
@@ -45,7 +45,7 @@ namespace MISP
 
         public Object GetVariable(String name)
         {
-            name = name.ToLowerInvariant();
+            //name = name.ToLowerInvariant();
             if (name == "@parent") return parentScope;
             if (!HasVariable(name)) return null;
             var list = variables[name];
@@ -54,7 +54,7 @@ namespace MISP
 
         public void ChangeVariable(String name, Object newValue)
         {
-            name = name.ToLowerInvariant();
+            //name = name.ToLowerInvariant();
             if (!variables.ContainsKey(name)) 
                 throw new ScriptError("Variable does not exist.", null);
             var list = variables[name];

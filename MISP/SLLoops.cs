@@ -106,8 +106,8 @@ namespace MISP
                     var cond = ArgumentType<ScriptObject>(arguments[0]);
                     var code = ArgumentType<ScriptObject>(arguments[1]);
 
-                    while (Evaluate(context, cond, true) != null)
-                        Evaluate(context, code, true);
+                    while (context.evaluationState == EvaluationState.Normal && Evaluate(context, cond, true) != null)
+                        if (context.evaluationState == EvaluationState.Normal) Evaluate(context, code, true);
                     return null;
                 },
                 Arguments.Lazy("condition"),

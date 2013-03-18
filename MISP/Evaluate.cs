@@ -57,7 +57,8 @@ namespace MISP
             bool ignoreStar = false,
             bool discardResults = false)
         {
-            if (context.evaluationState != EvaluationState.Normal) throw new ScriptError("Invalid Context", null);
+            if (context.evaluationState != EvaluationState.Normal)
+                throw new ScriptError("Invalid Context", null);
             if (context.callDepth >= context.maximumCallDepth)
             {
                 context.RaiseNewError("Overflow.", null);
@@ -101,173 +102,177 @@ namespace MISP
             else if (type == "stringexpression")
             {
                 if (discardResults) //Don't bother assembling the string expression.
+                {
+                    foreach (var piece in node._children)
                     {
-                        foreach (var piece in node._children)
+                        if ((piece as ScriptObject).gsp("@type") == "string")
+                            continue;
+                        else
                         {
-                            if ( (piece as ScriptObject).gsp("@type") == "string")
-                                continue;
-                            else
-                            {
-                                Evaluate(context, piece);
-                                if (context.evaluationState == EvaluationState.UnwindingError)
-                                    { context.callDepth -= 1; return null; }
-                            }
+                            Evaluate(context, piece);
+                            if (context.evaluationState == EvaluationState.UnwindingError)
+                            { context.callDepth -= 1; return null; }
                         }
-                        result = null;
+                    }
+                    result = null;
+                }
+                else
+                {
+                    if (node._children.Count == 1) //If there's only a single item, the result is that item.
+                    {
+                        result = Evaluate(context, node._child(0));
+                        if (context.evaluationState == EvaluationState.UnwindingError)
+                        { context.callDepth -= 1; return null; }
                     }
                     else
                     {
-                        if (node._children.Count == 1) //If there's only a single item, the result is that item.
+                        var resultString = String.Empty;
+                        foreach (var piece in node._children)
                         {
-                            result = Evaluate(context, node._child(0));
-                            if (context.evaluationState == EvaluationState.UnwindingError) 
-                                { context.callDepth -= 1; return null; }
+                            resultString += ScriptObject.AsString(Evaluate(context, piece));
+                            if (context.evaluationState == EvaluationState.UnwindingError)
+                            { context.callDepth -= 1; return null; }
                         }
-                        else
-                        {
-                            var resultString = String.Empty;
-                            foreach (var piece in node._children)
-                            {
-                                resultString += ScriptObject.AsString(Evaluate(context, piece));
-                                if (context.evaluationState == EvaluationState.UnwindingError)
-                                    { context.callDepth -= 1; return null; }
-                            }
-                            result = resultString;
-                        }
+                        result = resultString;
                     }
-            }
-                else if (type == "token")
-                {
-                    result = LookupToken(context, node.gsp("@token"));
-                    if (context.evaluationState == EvaluationState.UnwindingError)
-                    { context.callDepth -= 1; return null; }
                 }
+            }
+            else if (type == "token")
+            {
+                result = LookupToken(context, node.gsp("@token"));
+                if (context.evaluationState == EvaluationState.UnwindingError)
+                { context.callDepth -= 1; return null; }
+            }
             else if (type == "memberaccess")
+            {
+                var lhs = Evaluate(context, node._child(0));
+                if (context.evaluationState == EvaluationState.UnwindingError)
+                { context.callDepth -= 1; return null; }
+                String rhs = "";
+
+                if ((node._child(1) as ScriptObject).gsp("@type") == "token")
+                    rhs = (node._child(1) as ScriptObject).gsp("@token");
+                else
+                    rhs = ScriptObject.AsString(Evaluate(context, node._child(1), false));
+                if (context.evaluationState == EvaluationState.UnwindingError) { context.callDepth -= 1; return null; }
+
+                if (lhs == null) result = null;
+                else if (lhs is ScriptObject)
+                {
+                    result = (lhs as ScriptObject).GetProperty(ScriptObject.AsString(rhs));
+                    if (node.gsp("@token") == ":")
                     {
-                        var lhs = Evaluate(context, node._child(0));
+                        context.Scope.PushVariable("this", lhs);
+                        result = Evaluate(context, result, true, false);
+                        context.Scope.PopVariable("this");
                         if (context.evaluationState == EvaluationState.UnwindingError)
                         { context.callDepth -= 1; return null; }
-                        String rhs = "";
-
-                        if ((node._child(1) as ScriptObject).gsp("@type") == "token")
-                            rhs = (node._child(1) as ScriptObject).gsp("@token");
-                        else
-                            rhs = ScriptObject.AsString(Evaluate(context, node._child(1), false));
-                        if (context.evaluationState == EvaluationState.UnwindingError) { context.callDepth -= 1; return null; }
-
-                        if (lhs == null) result = null;
-                        else if (lhs is ScriptObject)
-                        {
-                            result = (lhs as ScriptObject).GetProperty(ScriptObject.AsString(rhs));
-                            if (node.gsp("@token") == ":")
-                            {
-                                context.Scope.PushVariable("this", lhs);
-                                result = Evaluate(context, result, true, false);
-                                context.Scope.PopVariable("this");
-                                if (context.evaluationState == EvaluationState.UnwindingError)
-                                { context.callDepth -= 1; return null; }
-                            }
-                        }
-                        else
-                        {
-                            var field = lhs.GetType().GetField(ScriptObject.AsString(rhs));
-                            if (field != null)
-                                result = field.GetValue(lhs);
-                            else
-                            {
-                                var prop = lhs.GetType().GetProperty(ScriptObject.AsString(rhs));
-                                if (prop != null)
-                                    result = prop.GetValue(rhs, null);
-                                else
-                                {
-                                    var func = lhs.GetType().GetMethod(ScriptObject.AsString(rhs));
-                                    if (func != null)
-                                    {
-                                        result = Function.MakeSystemFunction(ScriptObject.AsString(rhs),
-                                            Arguments.Args(Arguments.Optional(Arguments.Repeat("arg"))),
-                                            "Auto-bound function",
-                                            (_context, arguments) =>
-                                            {
-                                                return func.Invoke(lhs, (arguments[0] as ScriptList).ToArray());
-                                            });
-                                    }
-                                    else
-                                        result = null;
-                                }
-                            }
-                        }
                     }
-            else if (type == "node")
+                }
+                else
+                {
+                    var field = lhs.GetType().GetField(ScriptObject.AsString(rhs));
+                    if (field != null)
+                        result = field.GetValue(lhs);
+                    else
                     {
-                        if (!ignoreStar && node.gsp("@prefix") == "*")
-                        {
-                            result = node;
-                        }
+                        var prop = lhs.GetType().GetProperty(ScriptObject.AsString(rhs));
+                        if (prop != null)
+                            result = prop.GetValue(lhs, null);
                         else
                         {
-
-                        bool eval = node.gsp("@prefix") != "^";
-
-                        var arguments = new ScriptList();
-
-                        foreach (var child in node._children)
-                        {
-                            evaluateNodeChild(eval, child, arguments, context);
-                            if (context.evaluationState == EvaluationState.UnwindingError)
+                            var members = lhs.GetType().FindMembers(System.Reflection.MemberTypes.Method,
+                                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                                new System.Reflection.MemberFilter((minfo, obj) => { return minfo.Name == obj.ToString(); }),
+                                ScriptObject.AsString(rhs));
+                            if (members.Length != 0)
                             {
-                                context.callDepth -= 1;
-                                return null;
+                                result = new GenericScriptObject(
+                                    "@lazy-reflection", ScriptObject.AsString(rhs),
+                                    "@source-object", lhs,
+                                    "@source-type", lhs.GetType());
                             }
-                        }
-
-                        if (node.gsp("@prefix") == "^") result = arguments;
-                        else
-                        {
-                            if (arguments.Count > 0 && Function.IsFunction(arguments[0] as ScriptObject))
-                            {
-                               
-                                    result = Function.Invoke((arguments[0] as ScriptObject), this, context,
-                                        new ScriptList(arguments.GetRange(1, arguments.Count - 1)));
-                                    if (context.evaluationState == EvaluationState.UnwindingError)
-                                    {
-                                        context.PushStackTrace((arguments[0] as ScriptObject).gsp("@name"));
-                                        { context.callDepth -= 1; return null; }
-                                    }
-                                
-                            }
-                            else if (arguments.Count > 0)
-                                result = arguments[0];
                             else
                                 result = null;
                         }
                     }
+                }
+            }
+            else if (type == "node")
+            {
+                if (!ignoreStar && node.gsp("@prefix") == "*")
+                {
+                    result = node;
+                }
+                else
+                {
+
+                    bool eval = node.gsp("@prefix") != "^";
+
+                    var arguments = new ScriptList();
+
+                    foreach (var child in node._children)
+                    {
+                        evaluateNodeChild(eval, child, arguments, context);
+                        if (context.evaluationState == EvaluationState.UnwindingError)
+                        {
+                            context.callDepth -= 1;
+                            return null;
+                        }
+                    }
+
+                    if (node.gsp("@prefix") == "^") result = arguments;
+                    else
+                    {
+                        if (arguments.Count > 0 && Function.IsFunction(arguments[0] as ScriptObject))
+                        {
+
+                            result = Function.Invoke((arguments[0] as ScriptObject), this, context,
+                                new ScriptList(arguments.GetRange(1, arguments.Count - 1)));
+                            if (context.evaluationState == EvaluationState.UnwindingError)
+                            {
+                                context.PushStackTrace((arguments[0] as ScriptObject).gsp("@name"));
+                                { context.callDepth -= 1; return null; }
+                            }
+
+                        }
+                        else if (arguments.Count > 0 &&
+                            arguments[0] is ScriptObject &&
+                            (arguments[0] as ScriptObject).GetProperty("@lazy-reflection") != null)
+                        {
+                            var sObj = arguments[0] as ScriptObject;
+                            var argumentTypes = arguments.GetRange(1, arguments.Count - 1).Select(
+                                (obj) => obj.GetType()).ToArray();
+                            var sourceObject = sObj.GetProperty("@source-object");
+                            var method = (sObj.GetProperty("@source-type") as System.Type)
+                                .GetMethod(sObj.gsp("@lazy-reflection"), argumentTypes);
+                            if (method == null) 
+                                throw new ScriptError("Could not find overload for " +
+                                    sObj.gsp("@lazy-reflection") + " that takes argument types " +
+                                    String.Join(", ", argumentTypes.Select((t) => t.Name)) + " on type " +
+                                    sObj.GetProperty("@source-type").ToString(), what as ScriptObject);
+                            result = method.Invoke(sourceObject, arguments.GetRange(1, arguments.Count - 1).ToArray());
+                        }
+                        else if (arguments.Count > 0)
+                            result = arguments[0];
+                        else
+                            result = null;
+                    }
+                }
             }
             else if (type == "number")
             {
-                    try
-                    {
-                        if (node.gsp("@token").Contains('.')) result = Convert.ToSingle(node.gsp("@token"));
-                        else result = Convert.ToInt32(node.gsp("@token"));
-                    }
-                    catch (Exception e)
-                    {
-                        context.RaiseNewError("Number format error.", node);
-                        { context.callDepth -= 1; return null; }
-                    }
+                try
+                {
+                    if (node.gsp("@token").Contains('.')) result = Convert.ToSingle(node.gsp("@token"));
+                    else result = Convert.ToInt32(node.gsp("@token"));
+                }
+                catch (Exception e)
+                {
+                    context.RaiseNewError("Number format error.", node);
+                    { context.callDepth -= 1; return null; }
+                }
             }
-            else if (type == "dictionaryentry")
-            {
-                        var r = new ScriptList();
-                        foreach (var child in node._children)
-                            if ((child as ScriptObject).gsp("@type") == "token") r.Add((child as ScriptObject).gsp("@token"));
-                            else
-                            {
-                                r.Add(Evaluate(context, child));
-                                if (context.evaluationState == EvaluationState.UnwindingError)
-                                { context.callDepth -= 1; return null; }
-                            }
-                        result = r;
-                    }
             else
             {
                 context.RaiseNewError("Internal evaluator error.", node);
@@ -284,7 +289,7 @@ namespace MISP
 
         private object LookupToken(Context context, String value)
         {
-            value = value.ToLowerInvariant();
+            //value = value.ToLowerInvariant();
             if (specialVariables.ContainsKey(value)) return specialVariables[value](context);
             if (context.Scope.HasVariable(value)) return context.Scope.GetVariable(value);
             if (functions.ContainsKey(value)) return functions[value];

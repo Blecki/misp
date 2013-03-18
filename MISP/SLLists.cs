@@ -33,7 +33,7 @@ namespace MISP
                     context.Scope.PopVariable(vName);
                     return result;
                 },
-                Arguments.Mutator(Arguments.Arg("variable-name"), "(@string value)"),
+                Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
                 Arguments.Mutator(Arguments.Arg("in"), "(@list value)"),
                 Arguments.Lazy("code"));
 
@@ -53,7 +53,7 @@ namespace MISP
                     context.Scope.PopVariable(vName);
                     return result;
                 },
-                Arguments.Mutator(Arguments.Arg("variable-name"), "(@string value)"),
+                Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
                 Arguments.Mutator(Arguments.Arg("in"), "(@list value)"),
                 Arguments.Lazy("code"));
 
@@ -81,18 +81,37 @@ namespace MISP
                 "list : Returns first item in list.",
                 (context, arguments) =>
                 {
-                    return ArgumentType<ScriptList>(arguments[0]).FirstOrDefault();
+                    if (arguments[2] == null)
+                        return ArgumentType<ScriptList>(arguments[0]).FirstOrDefault();
+                    else
+                    {
+                        var vName = ArgumentType<String>(arguments[1]);
+                        var list = ArgumentType<ScriptList>(arguments[0]);
+                        var func = ArgumentType<ScriptObject>(arguments[2]);
+
+                        context.Scope.PushVariable(vName, null);
+                        var result = list.FirstOrDefault((o) => {
+                            context.Scope.ChangeVariable(vName, o);
+                            return Evaluate(context, func, true) != null;
+                        });
+                        context.Scope.PopVariable(vName);
+                        return result;
+                    }
                 },
-                Arguments.Mutator(Arguments.Arg("list"), "(@list value)"));
+                Arguments.Mutator(Arguments.Arg("list"), "(@list value)"),
+                Arguments.Optional(Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)")),
+                Arguments.Optional(Arguments.Lazy("code")));
 
             AddFunction("index",
                 "list n : Returns nth element in list.",
                 (context, arguments) =>
                 {
-                    var list = ArgumentType<ScriptList>(arguments[0]);
                     var index = arguments[1] as int?;
                     if (index == null || !index.HasValue) return null;
-                    if (index.Value < 0 || index.Value >= list.Count) return null;
+                    if (index.Value < 0) return null;
+
+                    var list = ArgumentType<ScriptList>(arguments[0]);
+                    if (index.Value >= list.Count) return null;
                     return list[index.Value];
                 },
                 Arguments.Mutator(Arguments.Arg("list"), "(@list value)"),

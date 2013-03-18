@@ -9,92 +9,67 @@ namespace MISP
     {
         private void SetupStringFunctions()
         {
-            /*
-            functions.Add("substr", Function.MakeSystemFunction("substr",
-                Arguments.ParseArguments(this, "value", "integer start", "integer ?count"),
-                "string start ?count: returns sub-string of string starting at start.",
+            AddFunction("strlen", "string : Returns length of string.",
+                (context, arguments) =>
+                {
+                    return ScriptObject.AsString(arguments[0]).Length;
+                }, Arguments.Arg("string"));
+
+            AddFunction("strind",
+                "string n : Returns nth element in string.",
+                (context, arguments) =>
+                {
+                    var index = arguments[1] as int?;
+                    if (index == null || !index.HasValue) return null;
+                    if (index.Value < 0) return null;
+                    var str = ScriptObject.AsString(arguments[0]);
+                        if (index.Value >= str.Length) return null;
+                        return str[index.Value];
+                },
+                Arguments.Arg("string"),
+                Arguments.Arg("n"));
+
+            AddFunction("substr", "Returns a portion of the input string.",
                 (context, arguments) =>
                 {
                     var str = ScriptObject.AsString(arguments[0]);
-                    var start = arguments[1] as int?;
-                    if (start == null || !start.HasValue) return "";
-                    int? length = arguments[2] as int?;
-                    if (length == null || !length.HasValue) length = str.Length;
+                    var start = AutoBind.IntArgument(arguments[1]);
+                    if (arguments[2] == null) return str.Substring(start);
+                    else return str.Substring(start, AutoBind.IntArgument(arguments[2]));
+                },
+                    Arguments.Arg("string"),
+                    Arguments.Arg("start"),
+                    Arguments.Optional("length"));
 
-                    if (start.Value < 0) { length -= start; start = 0; }
-                    if (start.Value >= str.Length) return new ScriptList();
-                    if (length.Value <= 0) return new ScriptList();
-                    if (length.Value + start.Value >= str.Length) length = str.Length - start.Value;
-                    return str.Substring(start.Value, length.Value);
-                }));
-
-            functions.Add("strcat", Function.MakeSystemFunction("strcat",
-                Arguments.ParseArguments(this, "?+item"), "<n> : Concatenate many strings into one.",
+            AddFunction("strcat", "Concatenate many strings into one.",
                 (context, arguments) =>
-                {
-                    var r = "";
-                    foreach (var obj in arguments[0] as ScriptList)
-                        if (obj == null) r += "null"; else r += ScriptObject.AsString(obj);
-                    return r;
-                }));
-
-            functions.Add("strrepeat", Function.MakeSystemFunction("strrepeat",
-                Arguments.ParseArguments(this, "integer n", "string part"),
-                "n part: Create a string consisting of part n times.",
-                    (context, arguments) =>
                     {
-                        var count = arguments[0] as int?;
-                        if (count == null | !count.HasValue) throw new ScriptError("Expected int", context.currentNode);
-                        var part = ScriptObject.AsString(arguments[1]);
-                        var r = "";
-                        for (int i = 0; i < count.Value; ++i) r += part;
-                        return r;
-                    }
-            ));
+                        var r = new StringBuilder();
+                        foreach (var obj in AutoBind.ListArgument(arguments[0]))
+                            r.Append(ScriptObject.AsString(obj));
+                        return r.ToString();
+                    },
+                    Arguments.Repeat("item"));
 
-            functions.Add("asstring", Function.MakeSystemFunction("asstring",
-                Arguments.ParseArguments(this, "value", "integer B"),
-                "A B : convert A to a string to depth B.",
+            AddFunction("itoa", "Change a number to the string representation.",
                 (context, arguments) =>
                 {
-                    var depth = arguments[1] as int?;
-                    if (depth == null || !depth.HasValue) return Console.PrettyPrint2(arguments[0], 0);
-                    else return Console.PrettyPrint2(arguments[0], depth.Value);
-                }));
-
-            AddFunction("path-leaf", "Get the leaf on a path", (context, arguments) =>
-                {
-                    return System.IO.Path.GetFileName(arguments[0] as String);
-                }, "string path");
-
-            AddFunction("itoa", "Change a number to a character",
-                (context, arguments) =>
-                {
-                    var i = arguments[0] as int?;
-                    if (i != null && i.HasValue) return new String((char)i.Value, 1);
-                    else return " ";
-                }, "integer i");
+                    return arguments[0].ToString();
+                }, 
+                Arguments.Arg("i"));
 
             AddFunction("atoi", "",
                 (context, arguments) =>
                 {
-                    return (int)(arguments[0].ToString())[0];
-                }, "string s");
+                    return Convert.ToInt32(arguments[0]);
+                }, 
+                Arguments.Arg("i"));
 
             AddFunction("unescape", "", (context, arguments) =>
             {
-                var place = 0;
-                var r = "";
-                var s = arguments[0].ToString();
-                while (place < s.Length)
-                {
-                    if (s[place] != '\\')
-                        r += s[place];
-                    ++place;
-                }
-                return r;
-            }, "string text");
-            */
+                return Console.UnescapeString(ScriptObject.AsString(arguments[0]));
+            },
+            Arguments.Arg("string"));
         }
     }
 }

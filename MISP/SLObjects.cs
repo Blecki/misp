@@ -20,16 +20,21 @@ namespace MISP
             AddFunction("record", "Create a new record.",
                 (context, arguments) =>
                 {
-                    var r = new GenericScriptObject();
-                    foreach (var item in arguments[0] as ScriptList)
+                    var obj = new GenericScriptObject();
+                    var vars = AutoBind.ListArgument(arguments[0]);
+                    foreach (var item in vars)
                     {
-                        var list = item as ScriptList;
-                        if (list == null || list.Count != 2) throw new ScriptError("Record expects only pairs as arguments.", context.currentNode);
-                        r[ScriptObject.AsString(list[0])] = list[1];
+                        var l = ArgumentType<ScriptObject>(item);
+                        if (l == null || l._children.Count != 2) throw new ScriptError("Record expects a list of pairs.", null);
+                        var arg = l._child(0) as ScriptObject;
+                        string mname = "";
+                        if (arg != null && arg.gsp("@type") == "token") mname = arg.gsp("@token");
+                        else mname = Evaluate(context, arg, true).ToString();
+                        obj.SetProperty(mname, Evaluate(context, l._child(1)));
                     }
-                    return r;
+                    return obj;
                 },
-                Arguments.Mutator(Arguments.Repeat(Arguments.Optional("pairs")), "(@list value)"));
+                Arguments.Repeat(Arguments.Lazy("pairs")));
 
             AddFunction("clone", "Clone a record.",
                 (context, arguments) =>
@@ -50,23 +55,7 @@ namespace MISP
                 (context, arguments) =>
                 {
                     if (arguments[0] == null) return arguments[2];
-                    if (arguments[0] is ScriptObject)
-                    {
-                        try
-                        {
-                            (arguments[0] as ScriptObject)[ScriptObject.AsString(arguments[1])] = arguments[2];
-                        }
-                        catch (Exception e)
-                        {
-                            context.RaiseNewError("System Exception: " + e.Message, context.currentNode);
-                        }
-                    }
-                    else
-                    {
-                        var field = arguments[0].GetType().GetField(ScriptObject.AsString(arguments[1]));
-                        if (field != null) field.SetValue(arguments[0], arguments[2]);
-                    }
-                    return arguments[2];
+                    return SetObjectProperty(context, arguments[0], ScriptObject.AsString(arguments[1]), arguments[2]);
                 },
                 Arguments.Arg("object"),
                 Arguments.Mutator(Arguments.Lazy("name"), "(@identifier-if-token value)"),
@@ -76,27 +65,60 @@ namespace MISP
                 (context, arguments) =>
                 {
                     var obj = ArgumentType<ScriptObject>(arguments[0]);
-                    var vars = ArgumentType<ScriptList>(arguments[1]);
+                    var vars = AutoBind.ListArgument(arguments[1]);
                     foreach (var item in vars)
                     {
-                        var l = ArgumentType<ScriptList>(item);
-                        if (l == null || l.Count != 2) throw new ScriptError("Multi-set expects a list of pairs.", null);
-                        obj.SetProperty(ScriptObject.AsString(l[0]), l[1]);
+                        var l = ArgumentType<ScriptObject>(item);
+                        if (l == null || l._children.Count != 2) throw new ScriptError("Multi-set expects a list of pairs.", null);
+                        var arg = l._child(0) as ScriptObject;
+                        string mname = "";
+                        if (arg != null && arg.gsp("@type") == "token") mname = arg.gsp("@token");
+                        else mname = Evaluate(context, arg, true).ToString();
+                        SetObjectProperty(context, obj, mname, Evaluate(context, l._child(1)));
                     }
                     return obj;
                 },
                 Arguments.Arg("object"),
-                Arguments.Mutator(Arguments.Arg("list"), "(@list value)"));
+                Arguments.Repeat(Arguments.Lazy("pairs")));
 
             AddFunction("delete", "Deletes a property from an object.",
                 (context, arguments) =>
                 {
                     var value = (arguments[0] as ScriptObject)[ScriptObject.AsString(arguments[1])];
-                    (arguments[0] as ScriptObject).DeleteProperty(ScriptObject.AsString(arguments[1]));
+                    if (arguments[0] is Scope)
+                        (arguments[0] as Scope).PopVariable(ScriptObject.AsString(arguments[1]));
+                    else
+                        (arguments[0] as ScriptObject).DeleteProperty(ScriptObject.AsString(arguments[1]));
                     return value;
                 },
                     Arguments.Arg("object"),
                     Arguments.Arg("property-name"));
+        }
+
+        private static object SetObjectProperty(Context context, Object obj, String name, Object value)
+        {
+            if (obj is ScriptObject)
+            {
+                try
+                {
+                    (obj as ScriptObject)[name] = value;
+                }
+                catch (Exception e)
+                {
+                    context.RaiseNewError("System Exception: " + e.Message, context.currentNode);
+                }
+            }
+            else
+            {
+                var field = obj.GetType().GetField(ScriptObject.AsString(name));
+                if (field != null) field.SetValue(obj, value);
+                else
+                {
+                    var prop = obj.GetType().GetProperty(ScriptObject.AsString(name));
+                    if (prop != null) prop.SetValue(obj, value, null);
+                }
+            }
+            return value;
         }
 
     }

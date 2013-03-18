@@ -7,7 +7,7 @@ namespace MISP
 {
     public partial class Engine
     {
-        private static Scope CopyScope(Scope scope)
+        internal static Scope CopyScope(Scope scope)
         {
             var r = new Scope();
             foreach (var v in scope.variables)
@@ -39,7 +39,7 @@ namespace MISP
                 functionBody,
                 CopyScope(context.Scope));
 
-            newFunction["help"] = ScriptObject.AsString(arguments[3]);
+            if (arguments[3] != null) newFunction["@help"] = ScriptObject.AsString(arguments[3]);
 
             if (addToScope) (newFunction["declaration-scope"] as Scope).PushVariable(functionName, newFunction);
 

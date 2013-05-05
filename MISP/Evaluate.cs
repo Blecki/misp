@@ -51,12 +51,6 @@ namespace MISP
             }
         }
 
-        public Object ChooseResult(Context context)
-        {
-            if (context.evaluationState == EvaluationState.UnwindingBreak) return context.breakObject;
-            return null;
-        }
-
         public Object Evaluate(
             Context context,
             Object what,
@@ -128,7 +122,7 @@ namespace MISP
                             if (context.evaluationState != EvaluationState.Normal)
                             {
                                 context.callDepth -= 1;
-                                return ChooseResult(context);
+                                return null;
                             }
                         }
                     }
@@ -140,9 +134,9 @@ namespace MISP
                     {
                         result = Evaluate(context, node._child(0));
                         if (context.evaluationState != EvaluationState.Normal)
-                        { 
+                        {
                             context.callDepth -= 1;
-                            return ChooseResult(context);
+                            return null;
                         }
                     }
                     else
@@ -151,10 +145,10 @@ namespace MISP
                         foreach (var piece in node._children)
                         {
                             resultString += ScriptObject.AsString(Evaluate(context, piece));
-                            if (context.evaluationState == EvaluationState.UnwindingError)
+                            if (context.evaluationState != EvaluationState.Normal)
                             { 
                                 context.callDepth -= 1; 
-                                return ChooseResult(context); 
+                                return null; 
                             }
                         }
                         result = resultString;
@@ -164,10 +158,10 @@ namespace MISP
             else if (type == "token")
             {
                 result = LookupToken(context, node.gsp("@token"));
-                if (context.evaluationState == EvaluationState.UnwindingError)
+                if (context.evaluationState != EvaluationState.Normal)
                 {
                     context.callDepth -= 1;
-                    return ChooseResult(context);
+                    return null;
                 }
             }
             else if (type == "memberaccess")
@@ -318,6 +312,7 @@ namespace MISP
             }
             else if (type == "char")
             {
+                context.callDepth -= 1;
                 return node.gsp("@token")[0];
             }
             else

@@ -161,6 +161,15 @@ namespace MISP
             //        return list;
             //    }));
 
+            AddFunction("reverse", "Reverse the elements of a list",
+                (context, arguments) =>
+                {
+                    var r = AutoBind.ListArgument(arguments[0]);
+                    if (r == null) r = new ScriptList();
+                    r.Reverse();
+                    return r;
+                }, Arguments.Arg("list"));
+
             AddFunction("array", "Create a list of items by running code N times",
                 (context, arguments) =>
                 {

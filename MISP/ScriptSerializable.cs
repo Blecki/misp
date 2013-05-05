@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MISP
 {
-    interface IScriptSerializable
+    public interface IScriptSerializable
     {
         String Serialize();
     }

@@ -117,7 +117,7 @@ public static ScriptObject MakeFunction(
                         {                                       //argument, it will get an empty list.
                             list.Add(MutateArgument(arguments[argumentIndex], info, engine, context));
                             //list.Add((info["@type"] as Type).ProcessArgument(context, arguments[argumentIndex]));
-                            if (context.evaluationState == EvaluationState.UnwindingError) return null;
+                            if (context.evaluationState != EvaluationState.Normal) return null;
                             ++argumentIndex;
                         }
                         newArguments.Add(list);
@@ -192,7 +192,9 @@ public static ScriptObject MakeFunction(
                 context.trace(new String('.', context.traceDepth) + "Leaving " + name +
                     (context.evaluationState == EvaluationState.UnwindingError ?
                     (" -Error: " + context.errorObject.GetLocalProperty("message").ToString()) :
-                    "") + "\n");
+                    "") +
+                    (context.evaluationState == EvaluationState.UnwindingBreak ? " -Breaking" : "") +
+                    "\n");
             }
 
             return r;

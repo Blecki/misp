@@ -60,10 +60,10 @@ namespace MISP
                             varName = nameObject.gsp("@token");
                         else
                             varName = AutoBind.StringArgument(Evaluate(context, nameObject, true));
-                        if (context.evaluationState == EvaluationState.UnwindingError) goto RUN_CLEANUP;
+                        if (context.evaluationState != EvaluationState.Normal) goto RUN_CLEANUP;
 
                         var varValue = Evaluate(context, sitem._child(1), false);
-                        if (context.evaluationState == EvaluationState.UnwindingError) goto RUN_CLEANUP;
+                        if (context.evaluationState != EvaluationState.Normal) goto RUN_CLEANUP;
 
                         context.Scope.PushVariable(varName, varValue);
                         cleanUp.Add(new LetVariable
@@ -76,12 +76,17 @@ namespace MISP
                     result = Evaluate(context, code, true);
 
                 RUN_CLEANUP:
+                    var pre_state = context.evaluationState;
                     foreach (var item in cleanUp)
                     {
-                        if (item.cleanupCode != null) Evaluate(context, item.cleanupCode, true, true);
+                        if (item.cleanupCode != null)
+                        {
+                            context.evaluationState = EvaluationState.Normal;
+                            Evaluate(context, item.cleanupCode, true, true);
+                        }
                         context.Scope.PopVariable(item.name);
                     }
-
+                    context.evaluationState = pre_state;
                     return result;
                 },
                 Arguments.Lazy("variables"),

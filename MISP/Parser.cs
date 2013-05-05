@@ -54,6 +54,40 @@ namespace MISP
             return result;
         }
 
+        public static ScriptObject ParseChar(ParseState state)
+        {
+            var result = new GenericScriptObject("@type", "char", "@start", state.start, "@source", state);
+            var token = "";
+
+            state.Advance(); //skip opening '
+            while (!state.AtEnd())
+            {
+                if (state.Next() == '\\')
+                {
+                    state.Advance();
+                    if (state.Next() == 'n') token += "\n";
+                    if (state.Next() == 't') token += "\t";
+                    if (state.Next() == 'r') token += "\r";
+                    else token += state.Next();
+                }
+                else if (state.Next() == '\'')
+                {
+                    result["@end"] = state.start;
+                    result["@token"] = token;
+                    state.Advance();
+                    return result;
+                }
+                else
+                {
+                    token += state.Next();
+                    state.Advance();
+                }
+            }
+
+            result["@end"] = state.start;
+            result["@token"] = token;
+            return result;
+        }
         public static ScriptObject ParseNumber(ParseState state)
         {
             var result = new GenericScriptObject("@type", "number", "@start", state.start, "@source", state);
@@ -177,6 +211,10 @@ namespace MISP
             {
                 result = ParseNode(state);
             }
+            else if (state.Next() == '\'')
+            {
+                result = ParseChar(state);
+            }
             else if ("-0123456789".Contains(state.Next()))
             {
                 result = ParseNumber(state);
@@ -198,7 +236,7 @@ namespace MISP
                     result = ParseToken(state);
             }
              
-            if (state.Next() == '.' || state.Next() == ':')
+            if (!state.AtEnd() && (state.Next() == '.' || state.Next() == ':'))
             {
                 var final_result = new GenericScriptObject("@type", "memberaccess", "@start", result["@start"],
                     "@source", state);
@@ -222,12 +260,12 @@ namespace MISP
             var result = new GenericScriptObject("@type", "node", "@start", state.start, "@source", state);
             if (!state.MatchNext(start)) throw new ParseError("Expected " + start, state.currentLine);
             state.Advance(start.Length);
-            while (!state.MatchNext(end))
+            while (!state.AtEnd() && !state.MatchNext(end))
             {
                 DevourWhitespace(state);
                 if (state.Next() == '}')
                     return result; 
-                if (!state.MatchNext(end))
+                if (!state.AtEnd() && !state.MatchNext(end))
                 {
                     var expression = ParseExpression(state);
                     if (isType(expression, "memberaccess")) expression = ReorderMemberAccessNode(expression);
@@ -235,7 +273,7 @@ namespace MISP
                 }
                 DevourWhitespace(state);
             }
-            state.Advance(end.Length);
+            if (end != null) state.Advance(end.Length);
             return result;
         }
 
@@ -308,20 +346,25 @@ namespace MISP
 
         public static ScriptObject ParseRoot(String script, String filename)
         {
-            var commentFree = "";
+            var commentFree = new StringBuilder();
             var state = new ParseState { start = 0, end = script.Length, source = script, filename = filename };
             while (!state.AtEnd())
             {
                 if (state.MatchNext("/*"))
-                    commentFree += (new String(' ',ParseComment(state)));
+                    commentFree.Append(new String(' ',ParseComment(state)));
                 else
                 {
-                    commentFree += state.Next();
+                    commentFree.Append(state.Next());
                     state.Advance();
                 }
             }
 
-            return ParseStringExpression(new ParseState { start = 0, end = commentFree.Length, source = commentFree, filename = filename }, true);
+            var r = ParseNode(
+                new ParseState { start = 0, end = commentFree.Length, source = commentFree.ToString(), filename = filename },
+                "", null);
+            if (r._children.Count == 1) return r._child(0) as ScriptObject;
+            r.SetProperty("@type", "root");
+            return r;
         }
                 
     }

@@ -5,18 +5,22 @@ using System.Text;
 
 namespace MISP
 {
-    public class NetModule
+    public interface ILibraryInterface
     {
-        public virtual void BindModule(Engine engine) { }
+        bool BindLibrary(Engine engine);
+    }
 
-        public static void LoadModule(Context context, Engine engine, String assemblyName, String moduleName)
+    public static class NetModule
+    {
+        public static bool LoadModule(Engine engine, String assemblyName, String moduleName)
         {
             var assembly = System.Reflection.Assembly.LoadFrom(assemblyName);
-            if (assembly == null) { context.RaiseNewError("Could not load assembly " + assemblyName, null); return; }
+            if (assembly == null) return false;
             var moduleType = assembly.GetType(moduleName);
-            if (moduleType == null) { context.RaiseNewError("Could not find type " + moduleName + " in assembly " + assemblyName, null); return; }
-            var module = Activator.CreateInstance(moduleType) as NetModule;
-            module.BindModule(engine);
+            if (moduleType == null) return false;
+            var module = Activator.CreateInstance(moduleType) as ILibraryInterface;
+            if (module != null) return module.BindLibrary(engine);
+            else return false;
         }
     }
 }

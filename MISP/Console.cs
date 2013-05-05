@@ -21,9 +21,8 @@ namespace MISP
         public Action<Engine> SetupHost;
         public bool noEcho = false;
 
-        public Environment AddEnvironment(String name, Engine engine, Context context)
+        public void PrepareEnvironment(Engine engine)
         {
-            environments.Upsert(name, new Environment { engine = engine, context = context, name = name });
             SetupStandardConsoleFunctions(engine);
             if (SetupHost != null) SetupHost(engine);
             engine.AddFunction("run-file", "Load and run a file.",
@@ -33,6 +32,12 @@ namespace MISP
                     return engine.EvaluateString(_context, text, ScriptObject.AsString(arguments[0]), false);
                 },
                 Arguments.Arg("name"));
+        }
+
+
+        public Environment AddEnvironment(String name, Engine engine, Context context)
+        {
+            environments.Upsert(name, new Environment { engine = engine, context = context, name = name });
             return environments[name];
         }
 
@@ -65,12 +70,13 @@ namespace MISP
                     if (l.Count > 0)
                     {
                         Write("list [" + l.Count + "] (\n");
-                        foreach (var item in l)
+                        for (int i = 0; i < l.Count && i < 20; ++i)
                         {
                             Write(new String('.', depth * 3 + 1));
-                            Write(PrettyPrint2(item, depth + 1));
+                            Write(PrettyPrint2(l[i], depth + 1));
                             Write("\n");
                         }
+                        if (l.Count >= 20) Write("...and additional items.\n");
                         Write(new String('.', depth * 3) + ")\n");
                     }
                     else
@@ -109,6 +115,7 @@ namespace MISP
         {
             var mispEngine = new Engine();
             var mispContext = new Context();
+            PrepareEnvironment(mispEngine);
             var environment = AddEnvironment(name, mispEngine, mispContext);
             mispContext.limitExecutionTime = false;
  
@@ -123,8 +130,12 @@ namespace MISP
             {
                 if (s[place] == '\\')
                 {
-                    if (place < s.Length - 1 && s[place + 1] == 'n')
-                        r += '\n';
+                    if (place < s.Length - 1)
+                    {
+                        if (s[place + 1] == 'n')
+                            r += '\n';
+                        else r += s[place + 1];
+                    }                    
                     place += 2;
                 }
                 else
@@ -178,7 +189,14 @@ namespace MISP
                     }
                     return null;
                 }, Arguments.Optional("list"));
-            
+
+            mispEngine.AddFunction("module", "Load a module from disc",
+                (context, arguments) =>
+                {
+                    return NetModule.LoadModule(mispEngine, AutoBind.StringArgument(arguments[0]),
+                        AutoBind.StringArgument(arguments[1]));
+                }, Arguments.Arg("file"), Arguments.Arg("module"));
+
         }
 
         private void EmitFunctionListItem(ScriptObject item)
@@ -204,11 +222,25 @@ namespace MISP
             {
                 var newContext = new Context();
                 var newEngine = new Engine();
+
+                PrepareEnvironment(newEngine);
+
+                if (arguments[2] != null)
+                {
+                    newEngine.Evaluate(newContext, arguments[2], true, true);
+                    if (newContext.evaluationState == EvaluationState.UnwindingError)
+                    {
+                        Write("Prime error:\n");
+                        Write(MISP.Console.PrettyPrint2(newContext.errorObject, 0));
+                        return false;
+                    }
+                }
+
                 var result = newEngine.EvaluateString(newContext,
                     System.IO.File.ReadAllText(arguments[0].ToString()), arguments[0].ToString()) as ScriptObject;
-                
 
-                if (newContext.evaluationState == EvaluationState.Normal)
+
+                if (newContext.evaluationState != EvaluationState.UnwindingError)
                 {
                     var environment = AddEnvironment(arguments[1].ToString(), newEngine, newContext);
                     if (environment.name == this.environment.name)
@@ -228,7 +260,7 @@ namespace MISP
                     Write(MISP.Console.PrettyPrint2(newContext.errorObject, 0));
                     return false;
                 }
-            }, Arguments.Arg("file"), Arguments.Arg("name"));
+            }, Arguments.Arg("file"), Arguments.Arg("name"), Arguments.Optional(Arguments.Lazy("prime")));
         }
 
         public void ExecuteCommand(String str)
@@ -247,6 +279,11 @@ namespace MISP
                                 Write("Execution time limit set to " + environment.context.allowedExecutionTime + "\n");
                             else
                                 Write("Execution time limit disabled.\n");
+                    }
+                    else if (str.StartsWith("\\trace"))
+                    {
+                        if (environment.context.trace == null) environment.context.trace = Write;
+                        else environment.context.trace = null;
                     }
                     else if (str.StartsWith("\\environments"))
                     {
@@ -269,18 +306,19 @@ namespace MISP
                 }
                 else
                 {
+                    noEcho = false;
                     environment.context.ResetTimer();
                     environment.context.evaluationState = EvaluationState.Normal;
                     var result = environment.engine.EvaluateString(environment.context, "(" + str + ")", "");
 
-                    if (environment.context.evaluationState == EvaluationState.Normal)
+                    if (environment.context.evaluationState != EvaluationState.UnwindingError)
                     {
                         if (!noEcho) Write(MISP.Console.PrettyPrint2(result, 0) + "\n");
                     }
                     else
                     {
                         Write("Error:\n");
-                        Write(MISP.Engine.TightFormat(environment.context.errorObject));
+                        Write(MISP.Console.PrettyPrint2(environment.context.errorObject, 0));
                     }
 
                     if (!environment.context.CheckScope())
@@ -290,7 +328,7 @@ namespace MISP
                     var prompt = environment.context.Scope.GetVariable("@prompt");
                     if (prompt != null && Function.IsFunction(prompt as ScriptObject))
                         Function.Invoke(prompt as ScriptObject, environment.engine, environment.context, new ScriptList());
-                    noEcho = false;
+                    
                 }
             }
             catch (Exception e)
@@ -307,7 +345,7 @@ namespace MISP
                 environment.context.evaluationState = EvaluationState.Normal;
                 var result = environment.engine.Evaluate(environment.context, obj, true, false);
 
-                if (environment.context.evaluationState == EvaluationState.Normal)
+                if (environment.context.evaluationState != EvaluationState.UnwindingError)
                 {
                     if (!noEcho) Write(MISP.Console.PrettyPrint2(result, 0) + "\n");
                 }

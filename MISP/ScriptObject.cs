@@ -192,6 +192,14 @@ namespace MISP
         {
             properties.Clear();
         }
+
+        public ScriptObject AddFunction(String name, String comment, Func<Context, ScriptList, Object> func,
+            params ScriptObject[] arguments)
+        {
+            var r = Function.MakeSystemFunction(name, new ScriptList(arguments), comment, func);
+            SetProperty(name, r);
+            return r;
+        }
     }
 
 

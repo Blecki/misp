@@ -35,6 +35,7 @@ namespace MISP
 
         public bool MatchNext(String str) 
         {
+            if (str == null) return false;
             if (str.Length + start > source.Length) return false;
             return str == source.Substring(start, str.Length); 
         }

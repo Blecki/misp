@@ -34,18 +34,20 @@ namespace MISP
             ScriptObject obj,
             List<ScriptObject> globalFunctions,
             List<ObjectRecord> objects,
-            List<ObjectRecord> lambdas)
+            List<ObjectRecord> lambdas,
+            bool ignoreFunctions = false)
         {
             if (obj == null) return;
 
             if (Function.IsFunction(obj))
             {
+                if (ignoreFunctions) return;
                 //System function?
                 if (Function.IsSystemFunction(obj)) return;
                 //Lambda function?
                 if (globalFunctions.Contains(obj)) return;
                 if (AddRef(obj, lambdas))
-                    EnumerateObject(obj["declaration-scope"] as ScriptObject, globalFunctions, objects, lambdas);
+                    EnumerateObject(obj["declaration-scope"] as ScriptObject, globalFunctions, objects, lambdas, ignoreFunctions);
             }
             else
             {
@@ -55,7 +57,7 @@ namespace MISP
                     if (value is ScriptObject)
                     {
                         if (AddRef(value as ScriptObject, objects))
-                            EnumerateObject(value as ScriptObject, globalFunctions, objects, lambdas);
+                            EnumerateObject(value as ScriptObject, globalFunctions, objects, lambdas, ignoreFunctions);
                     } 
                     else if (value is ScriptList)
                     {
@@ -63,7 +65,7 @@ namespace MISP
                         {
                             if (item is ScriptObject)
                                 if (AddRef(item as ScriptObject, objects))
-                                    EnumerateObject(item as ScriptObject, globalFunctions, objects, lambdas);
+                                    EnumerateObject(item as ScriptObject, globalFunctions, objects, lambdas, ignoreFunctions);
                         }
                     }
 
@@ -85,24 +87,30 @@ namespace MISP
             List<ScriptObject> globalFunctions,
             List<ObjectRecord> objects,
             List<ObjectRecord> lambdas,
-            int depth)
+            int depth,
+            bool ignoreFunctions = false)
         {
 
             if (value == null) to.Write("null");
             else if (value is ScriptObject)
             {
-                if (Function.IsSystemFunction(value as ScriptObject) ||
-                    globalFunctions.Contains(value)) to.Write((value as ScriptObject).gsp("@name"));
+                if ((!ignoreFunctions) &&
+                    (Function.IsSystemFunction(value as ScriptObject) || globalFunctions.Contains(value))) 
+                    to.Write((value as ScriptObject).gsp("@name"));
                 else
                 {
                     var index = IndexIn(value as ScriptObject, objects);
                     if (index != -1) to.Write("(index objects " + index + ")");
                     else
                     {
-                        index = IndexIn(value as ScriptObject, lambdas);
-                        if (index != -1) to.Write("(index lambdas " + index + ")");
+                        if (ignoreFunctions) EmitObject(to, value as ScriptObject, globalFunctions, objects, lambdas, depth, ignoreFunctions);
                         else
-                            EmitObject(to, value as ScriptObject, globalFunctions, objects, lambdas, depth);
+                        {
+                            index = IndexIn(value as ScriptObject, lambdas);
+                            if (index != -1) to.Write("(index lambdas " + index + ")");
+                            else
+                                EmitObject(to, value as ScriptObject, globalFunctions, objects, lambdas, depth, ignoreFunctions);
+                        }
                     }
                 }
             }
@@ -113,7 +121,7 @@ namespace MISP
                 to.Write("^(");
                 foreach (var item in value as ScriptList)
                 {
-                    EmitObjectProperty(to, item, globalFunctions, objects, lambdas, depth + 1);
+                    EmitObjectProperty(to, item, globalFunctions, objects, lambdas, depth + 1, ignoreFunctions);
                     to.Write(" ");
                 }
                 to.Write(")");
@@ -124,6 +132,13 @@ namespace MISP
                 to.Write(value.ToString());
             else if (value is Single)
                 to.Write(value.ToString());
+            else if (value is Boolean)
+            {
+                if ((value as Boolean?).Value == true)
+                    to.Write("true");
+                else
+                    to.Write("null");
+            }
             else if (value is IScriptSerializable)
                 to.Write((value as IScriptSerializable).Serialize());
             else
@@ -139,13 +154,14 @@ namespace MISP
             List<ScriptObject> globalFunctions,
             List<ObjectRecord> objects,
             List<ObjectRecord> lambdas,
-            int depth)
+            int depth,
+            bool ignoreFunctions = false)
         {
             foreach (var propertyName in obj.ListProperties())
             {
                 to.Write("\n" + new String(' ', depth * 3) + "(" + propertyName as String + " ");
                 var value = obj.GetLocalProperty(propertyName as String);
-                EmitObjectProperty(to, value, globalFunctions, objects, lambdas, depth);
+                EmitObjectProperty(to, value, globalFunctions, objects, lambdas, depth, ignoreFunctions);
                 to.Write(")");
             }
         }
@@ -156,10 +172,11 @@ namespace MISP
             List<ScriptObject> globalFunctions,
             List<ObjectRecord> objects,
             List<ObjectRecord> lambdas,
-            int depth)
+            int depth,
+            bool ignoreFunctions = false)
         {
             to.WriteLine("(record ");
-            EmitObjectProperties(to, obj, globalFunctions, objects, lambdas, depth + 1);
+            EmitObjectProperties(to, obj, globalFunctions, objects, lambdas, depth + 1, ignoreFunctions);
             to.Write(")");
         }
 
@@ -168,11 +185,12 @@ namespace MISP
             ScriptObject obj,
             List<ScriptObject> globalFunctions,
             List<ObjectRecord> objects,
-            List<ObjectRecord> lambdas)
+            List<ObjectRecord> lambdas,
+            bool ignoreFunctions = false)
         {
             var index = IndexIn(obj, objects);
             to.WriteLine("(multi-set (index objects " + index + ") ");
-            EmitObjectProperties(to, obj, globalFunctions, objects, lambdas, 1);
+            EmitObjectProperties(to, obj, globalFunctions, objects, lambdas, 1, ignoreFunctions);
             to.Write(")\n");
         }
 
@@ -275,6 +293,38 @@ namespace MISP
             //Emit footer
             var thisIndex = IndexIn(scope, objects);
             to.Write("(index objects " + thisIndex + "))))");
+        }
+
+        public void SerializeObject(System.IO.TextWriter to, ScriptObject obj)
+        {
+            if (obj == null)
+            {
+                to.WriteLine("(null)");
+                return;
+            }
+
+            var objects = new List<ObjectRecord>();
+
+            EnumerateObject(obj, null, objects, null, true);
+
+            //Filter out objects with just a single reference
+            objects = new List<ObjectRecord>(objects.Where((o) => { return o.referenceCount > 1; }));
+            AddRef(obj, objects);
+
+            //Create and emit lambda functions.
+            to.WriteLine("(let ((\"objects\" (array " + objects.Count + " (record))))");
+            to.WriteLine("  (lastarg\n");
+
+            
+            //Emit remaining objects
+            foreach (var _obj in objects)
+                EmitObjectRoot(to, _obj.obj, null, objects, null, true);
+
+            //Emit footer
+            var thisIndex = IndexIn(obj, objects);
+            to.WriteLine("      (index objects " + thisIndex + ")");
+            to.WriteLine("  )");
+            to.WriteLine(")");
         }
 
     }

@@ -9,6 +9,7 @@ namespace MISP
     {
         Normal,
         UnwindingError,
+        UnwindingBreak,
     }
 
     public class Context
@@ -17,6 +18,14 @@ namespace MISP
         public ScriptObject currentNode = null;
         public EvaluationState evaluationState;
         public ScriptObject errorObject = null;
+        public Object breakObject = null;
+
+        public Object UnBreak()
+        {
+            System.Diagnostics.Debug.Assert(evaluationState == EvaluationState.UnwindingBreak);
+            evaluationState = EvaluationState.Normal;
+            return breakObject;
+        }
 
         public void RaiseNewError(String message, ScriptObject location)
         {

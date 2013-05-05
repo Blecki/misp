@@ -34,7 +34,7 @@ namespace MISP
             if (callFunction && arguments.Count > 0 && (Function.IsFunction(arguments[0] as ScriptObject)))
             {
                 var argumentInfo = Function.GetArgumentInfo(arguments[0] as ScriptObject, context, arguments.Count - 1);
-                if (context.evaluationState == EvaluationState.UnwindingError) return;
+                if (context.evaluationState != EvaluationState.Normal) return;
                 lazyArgument = argumentInfo["@lazy"] != null;
             }
 
@@ -43,12 +43,18 @@ namespace MISP
             else
             {
                 var argument = Evaluate(context, child);
-                if (context.evaluationState == EvaluationState.UnwindingError) return;
+                if (context.evaluationState != EvaluationState.Normal) return;
                 if (prefix == "$" && argument is ScriptList)
                     arguments.AddRange(argument as ScriptList);
                 else
                     arguments.Add(argument);
             }
+        }
+
+        public Object ChooseResult(Context context)
+        {
+            if (context.evaluationState == EvaluationState.UnwindingBreak) return context.breakObject;
+            return null;
         }
 
         public Object Evaluate(
@@ -89,11 +95,20 @@ namespace MISP
                 return null;
             }
 
-            if (node.gsp("@prefix") == "*" && !ignoreStar) { context.callDepth -= 1; return node; }
-            object result = null;
-
+            if (node.gsp("@prefix") == "*" && !ignoreStar) //Object is a quoted node
+            { 
+                context.callDepth -= 1; 
+                return node; 
+            }
+            
             var type = node.gsp("@type");
-            if (String.IsNullOrEmpty(type)) { context.callDepth -= 1; return node; } //Object is not evaluatable code.
+            if (String.IsNullOrEmpty(type)) 
+            { 
+                context.callDepth -= 1; 
+                return node; 
+            } //Object is not evaluatable code.
+
+            object result = null;
 
             if (type == "string")
             {
@@ -110,8 +125,11 @@ namespace MISP
                         else
                         {
                             Evaluate(context, piece);
-                            if (context.evaluationState == EvaluationState.UnwindingError)
-                            { context.callDepth -= 1; return null; }
+                            if (context.evaluationState != EvaluationState.Normal)
+                            {
+                                context.callDepth -= 1;
+                                return ChooseResult(context);
+                            }
                         }
                     }
                     result = null;
@@ -121,8 +139,11 @@ namespace MISP
                     if (node._children.Count == 1) //If there's only a single item, the result is that item.
                     {
                         result = Evaluate(context, node._child(0));
-                        if (context.evaluationState == EvaluationState.UnwindingError)
-                        { context.callDepth -= 1; return null; }
+                        if (context.evaluationState != EvaluationState.Normal)
+                        { 
+                            context.callDepth -= 1;
+                            return ChooseResult(context);
+                        }
                     }
                     else
                     {
@@ -131,7 +152,10 @@ namespace MISP
                         {
                             resultString += ScriptObject.AsString(Evaluate(context, piece));
                             if (context.evaluationState == EvaluationState.UnwindingError)
-                            { context.callDepth -= 1; return null; }
+                            { 
+                                context.callDepth -= 1; 
+                                return ChooseResult(context); 
+                            }
                         }
                         result = resultString;
                     }
@@ -141,12 +165,15 @@ namespace MISP
             {
                 result = LookupToken(context, node.gsp("@token"));
                 if (context.evaluationState == EvaluationState.UnwindingError)
-                { context.callDepth -= 1; return null; }
+                {
+                    context.callDepth -= 1;
+                    return ChooseResult(context);
+                }
             }
             else if (type == "memberaccess")
             {
                 var lhs = Evaluate(context, node._child(0));
-                if (context.evaluationState == EvaluationState.UnwindingError)
+                if (context.evaluationState != EvaluationState.Normal)
                 { context.callDepth -= 1; return null; }
                 String rhs = "";
 
@@ -154,7 +181,7 @@ namespace MISP
                     rhs = (node._child(1) as ScriptObject).gsp("@token");
                 else
                     rhs = ScriptObject.AsString(Evaluate(context, node._child(1), false));
-                if (context.evaluationState == EvaluationState.UnwindingError) { context.callDepth -= 1; return null; }
+                if (context.evaluationState != EvaluationState.Normal) { context.callDepth -= 1; return null; }
 
                 if (lhs == null) result = null;
                 else if (lhs is ScriptObject)
@@ -165,7 +192,7 @@ namespace MISP
                         context.Scope.PushVariable("this", lhs);
                         result = Evaluate(context, result, true, false);
                         context.Scope.PopVariable("this");
-                        if (context.evaluationState == EvaluationState.UnwindingError)
+                        if (context.evaluationState != EvaluationState.Normal)
                         { context.callDepth -= 1; return null; }
                     }
                 }
@@ -214,7 +241,7 @@ namespace MISP
                     foreach (var child in node._children)
                     {
                         evaluateNodeChild(eval, child, arguments, context);
-                        if (context.evaluationState == EvaluationState.UnwindingError)
+                        if (context.evaluationState != EvaluationState.Normal)
                         {
                             context.callDepth -= 1;
                             return null;
@@ -229,10 +256,12 @@ namespace MISP
 
                             result = Function.Invoke((arguments[0] as ScriptObject), this, context,
                                 new ScriptList(arguments.GetRange(1, arguments.Count - 1)));
-                            if (context.evaluationState == EvaluationState.UnwindingError)
+                            if (context.evaluationState != EvaluationState.Normal)
                             {
-                                context.PushStackTrace((arguments[0] as ScriptObject).gsp("@name"));
-                                { context.callDepth -= 1; return null; }
+                                if (context.evaluationState == EvaluationState.UnwindingError)
+                                    context.PushStackTrace((arguments[0] as ScriptObject).gsp("@name"));
+                                context.callDepth -= 1; 
+                                return null;
                             }
 
                         }
@@ -260,6 +289,20 @@ namespace MISP
                     }
                 }
             }
+            else if (type == "root")
+            {
+                var results = new ScriptList();
+                foreach (var child in node._children)
+                {
+                    results.Add(Evaluate(context, child, false, false));
+                    if (context.evaluationState != EvaluationState.Normal)
+                        {
+                            context.callDepth -= 1;
+                            return null;
+                        }
+                    }
+                return results;
+            }
             else if (type == "number")
             {
                 try
@@ -273,6 +316,10 @@ namespace MISP
                     { context.callDepth -= 1; return null; }
                 }
             }
+            else if (type == "char")
+            {
+                return node.gsp("@token")[0];
+            }
             else
             {
                 context.RaiseNewError("Internal evaluator error.", node);
@@ -281,7 +328,7 @@ namespace MISP
 
             if (node.gsp("@prefix") == ":" && !ignoreStar)
                 result = Evaluate(context, result);
-            if (context.evaluationState == EvaluationState.UnwindingError) { context.callDepth -= 1; return null; };
+            if (context.evaluationState != EvaluationState.Normal) { context.callDepth -= 1; return null; };
             if (node.gsp("@prefix") == ".") result = LookupToken(context, ScriptObject.AsString(result));
             context.callDepth -= 1;
             return result;

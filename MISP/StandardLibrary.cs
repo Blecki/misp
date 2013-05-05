@@ -170,8 +170,14 @@ namespace MISP
                 Arguments.Optional(Arguments.Repeat("value")));
 
             AddFunction("coalesce", "B if A is null, A otherwise.",
-                (context, arguments) => { return (arguments[0] == null) ? arguments[1] : arguments[0]; },
-                Arguments.Arg("A"), Arguments.Arg("B"));
+                (context, arguments) => 
+                {
+                    if (arguments[0] == null)
+                        return Evaluate(context, arguments[1], true, false);
+                    else
+                        return arguments[0];
+                },
+                Arguments.Arg("A"), Arguments.Lazy("B"));
 
             AddFunction("raise-error", "Raises a new error.",
                 (context, arguments) =>
@@ -194,6 +200,14 @@ namespace MISP
                 },
                     Arguments.Lazy("good"),
                     Arguments.Lazy("bad"));
+
+            AddFunction("break", "Aborts loops and supplies a return value.",
+                (context, arguments) =>
+                {
+                    context.evaluationState = EvaluationState.UnwindingBreak;
+                    context.breakObject = arguments[0];
+                    return null;
+                }, Arguments.Arg("value"));
 
             AddFunction("reflect", "Examine an object using .net reflection.",
                 (context, arguments) =>
@@ -267,6 +281,15 @@ namespace MISP
                     return stream.ToString();
                 },
                 Arguments.Arg("func", "Must be a function."));
+
+            AddFunction("serialize", "Serialize an object",
+                (context, arguments) =>
+                {
+                    var stream = new System.IO.StringWriter();
+                    SerializeObject(stream, arguments[0] as ScriptObject);
+                    return stream.ToString();
+                },
+                    Arguments.Arg("object"));
 
 
             SetupVariableFunctions();

@@ -9,6 +9,15 @@ namespace MISP
     {
         private void SetupStringFunctions()
         {
+            AddFunction("split", "Split a string into pieces", (context, arguments) =>
+                {
+                    var pieces = AutoBind.StringArgument(arguments[0]).Split(
+                        new String[] { AutoBind.StringArgument(arguments[1]) }, 
+                        Int32.MaxValue, StringSplitOptions.RemoveEmptyEntries);
+                    var r = new ScriptList(pieces);
+                    return r;
+                }, Arguments.Arg("string"), Arguments.Arg("split-chars"));
+
             AddFunction("strlen", "string : Returns length of string.",
                 (context, arguments) =>
                 {
@@ -70,6 +79,15 @@ namespace MISP
                 return Console.UnescapeString(ScriptObject.AsString(arguments[0]));
             },
             Arguments.Arg("string"));
+
+            AddFunction("format", "Format a string.",
+                (context, arguments) =>
+                {
+                    return String.Format(AutoBind.StringArgument(arguments[0]),
+                        AutoBind.ListArgument(arguments[1]).ToArray());
+                },
+                Arguments.Arg("format-string"),
+                Arguments.Optional(Arguments.Repeat("value")));
         }
     }
 }

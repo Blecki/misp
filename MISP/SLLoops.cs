@@ -13,7 +13,7 @@ namespace MISP
                 (context, arguments) =>
                 {
                     var vName = ArgumentType<String>(arguments[0]);
-                    var list = ArgumentType<ScriptList>(arguments[1]);
+                    var list = ArgumentType<System.Collections.IEnumerable>(arguments[1]);
                     var code = ArgumentType<ScriptObject>(arguments[2]);
                     var result = new ScriptList();
                     context.Scope.PushVariable(vName, null);
@@ -21,32 +21,44 @@ namespace MISP
                     {
                         context.Scope.ChangeVariable(vName, item);
                         result.Add(Evaluate(context, code, true));
+                        if (context.evaluationState == EvaluationState.UnwindingBreak)
+                        {
+                            context.Scope.PopVariable(vName);
+                            return context.UnBreak();
+                        }
                     }
                     context.Scope.PopVariable(vName);
                     return result;
                 },
                 Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
-                Arguments.Mutator(Arguments.Arg("in"), "(@list value)"),
+                Arguments.Arg("in"),
                 Arguments.Lazy("code"));
 
             AddFunction("mapi", "Like map, except the variable will hold the index.",
                 (context, arguments) =>
                 {
                     var vName = ArgumentType<String>(arguments[0]);
-                    var list = ArgumentType<ScriptList>(arguments[1]);
-                    var code = ArgumentType<ScriptObject>(arguments[2]);
+                    var from = AutoBind.IntArgument(arguments[1]);
+                    var to = AutoBind.IntArgument(arguments[2]);
+                    var code = ArgumentType<ScriptObject>(arguments[3]);
                     var result = new ScriptList();
                     context.Scope.PushVariable(vName, null);
-                    for (int i = 0; i < list.Count; ++i)
+                    for (int i = from; i < to; ++i)
                     {
                         context.Scope.ChangeVariable(vName, i);
                         result.Add(Evaluate(context, code, true));
+                        if (context.evaluationState == EvaluationState.UnwindingBreak)
+                        {
+                            context.Scope.PopVariable(vName);
+                            return context.UnBreak();
+                        }
                     }
                     context.Scope.PopVariable(vName);
                     return result;
                 },
                 Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
-                Arguments.Mutator(Arguments.Arg("in"), "(@list value)"),
+                Arguments.Arg("from"),
+                Arguments.Arg("to"),
                 Arguments.Lazy("code"));
 
 
@@ -65,6 +77,11 @@ namespace MISP
                     {
                         context.Scope.ChangeVariable(vName, item);
                         result.Add(Evaluate(context, code, true));
+                        if (context.evaluationState == EvaluationState.UnwindingBreak)
+                        {
+                            context.Scope.PopVariable(vName);
+                            return context.UnBreak();
+                        }
                         item = Evaluate(context, next, true);
                     }
 
@@ -81,7 +98,7 @@ namespace MISP
                 (context, arguments) =>
                 {
                     var vName = ArgumentType<String>(arguments[0]);
-                    var list = ArgumentType<ScriptList>(arguments[1]);
+                    var list = ArgumentType<System.Collections.IEnumerable>(arguments[1]);
                     var func = ArgumentType<ScriptObject>(arguments[2]);
                     context.Scope.PushVariable(vName, null);
                     Object result = null;
@@ -89,6 +106,11 @@ namespace MISP
                     {
                         context.Scope.ChangeVariable(vName, item);
                         result = Evaluate(context, func, true);
+                        if (context.evaluationState == EvaluationState.UnwindingBreak)
+                        {
+                            context.Scope.PopVariable(vName);
+                            return context.UnBreak();
+                        }
                     }
 
                     context.Scope.PopVariable(vName);
@@ -96,7 +118,37 @@ namespace MISP
                     return result;
                 },
                 Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
-                Arguments.Mutator(Arguments.Arg("list"), "(@list value)"),
+                Arguments.Arg("list"),
+                Arguments.Lazy("code"));
+
+            AddFunction("fori",
+                "variable_name list code : Execute code for each item in list. Returns result of last run of code.",
+                (context, arguments) =>
+                {
+                    var vName = ArgumentType<String>(arguments[0]);
+                    var from = AutoBind.IntArgument(arguments[1]);
+                    var to = AutoBind.IntArgument(arguments[2]);
+                    var func = ArgumentType<ScriptObject>(arguments[3]);
+                    context.Scope.PushVariable(vName, null);
+                    Object result = null;
+                    for (int i = from; i < to; ++i)
+                    {
+                        context.Scope.ChangeVariable(vName, i);
+                        result = Evaluate(context, func, true);
+                        if (context.evaluationState == EvaluationState.UnwindingBreak)
+                        {
+                            context.Scope.PopVariable(vName);
+                            return context.UnBreak();
+                        }
+                    }
+
+                    context.Scope.PopVariable(vName);
+
+                    return result;
+                },
+                Arguments.Mutator(Arguments.Lazy("variable-name"), "(@identifier value)"),
+                Arguments.Arg("from"),
+                Arguments.Arg("to"),
                 Arguments.Lazy("code"));
 
             AddFunction("while",
@@ -108,6 +160,7 @@ namespace MISP
 
                     while (context.evaluationState == EvaluationState.Normal && Evaluate(context, cond, true) != null)
                         if (context.evaluationState == EvaluationState.Normal) Evaluate(context, code, true);
+                    if (context.evaluationState == EvaluationState.UnwindingBreak) return context.UnBreak();
                     return null;
                 },
                 Arguments.Lazy("condition"),

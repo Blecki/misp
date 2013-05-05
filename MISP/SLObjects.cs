@@ -25,7 +25,8 @@ namespace MISP
                     foreach (var item in vars)
                     {
                         var l = ArgumentType<ScriptObject>(item);
-                        if (l == null || l._children.Count != 2) throw new ScriptError("Record expects a list of pairs.", null);
+                        if (l == null || l._children.Count != 2) 
+                            throw new ScriptError("Record expects a list of pairs.", null);
                         var arg = l._child(0) as ScriptObject;
                         string mname = "";
                         if (arg != null && arg.gsp("@type") == "token") mname = arg.gsp("@token");

@@ -135,7 +135,11 @@ namespace MISP
                     {
                         context.Scope.ChangeVariable(vName, i);
                         result = Evaluate(context, func, true);
-                        if (context.evaluationState == EvaluationState.UnwindingBreak)
+                        if (context.evaluationState == EvaluationState.UnwindingError)
+                        {
+                            return result;
+                        }
+                        else if (context.evaluationState == EvaluationState.UnwindingBreak)
                         {
                             context.Scope.PopVariable(vName);
                             return context.UnBreak();

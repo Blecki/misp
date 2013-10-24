@@ -1,0 +1,252 @@
+/* This example turns text into neat glyphs made of unicode box drawing characters.
+	These were used in a piece of interactive fiction. */
+
+/* First setup the character mapping. The existence of capitals in this list is a red herring. */
+(set @globals encoding-table
+	(record
+		/*(MAP "abcdefghijklmno")
+		  (BAS "─│┌┐└┘├┤┬┴┼▲►▼◄")*/
+		(a "──┐")
+		(b "──┘")
+		(c "──┤")
+		(d "─┬┐")
+		(e "─┬┘")
+		(f "─┬┤")
+		(g "─┴┐")
+		(h "─┴┘")
+		(i "─┴┤")
+		(j "─┼┐")
+		(k "─┼┘")
+		(l "─┼┤")
+
+		(m "┬─┐")
+		(n "┬─┘")
+		(o "┬─┤")
+		(p "┬┬┐")
+		(q "┬┬┘")
+		(r "┬┬┤")
+		(s "┬┴┐")
+		(t "┬┴┘")
+		(u "┬┴┤")
+		(v "┬┼┐")
+		(w "┬┼┘")
+		(x "┬┼┤")
+
+		(y "┴─┐")
+		(z "┴─┘")
+		(A "┴─┤")
+		(B "┴┬┐")
+		(C "┴┬┘")
+		(D "┴┬┤")
+		(E "┴┴┐")
+		(F "┴┴┘")
+		(G "┴┴┤")
+		(H "┴┼┐")
+		(I "┴┼┘")
+		(J "┴┼┤")
+
+		(K "┼─┐")
+		(L "┼─┘")
+		(M "┼─┤")
+		(N "┼┬┐")
+		(O "┼┬┘")
+		(P "┼┬┤")
+		(Q "┼┴┐")
+		(R "┼┴┘")
+		(S "┼┴┤")
+		(T "┼┼┐")
+		(U "┼┼┘")
+		(V "┼┼┤")
+		
+		("." "►──")
+		("!" "►┼┤")
+		("?" "►─┐")
+
+	)
+)
+
+(defun index-of ((arg string)(arg character))
+	(if (= (strlen string) 0) -1
+		(fori i 0 (strlen string)
+			(if (= (strind string i) character)
+				(break i)
+				-1
+			)
+		)
+	)
+	"Find the index of the first occurance of 'character' within 'string'. If not found, returns -1."
+)
+
+(defun is-capital ((arg char))
+	(&& (>= char 'A') (<= char 'Z'))
+	"Is 'char' a capital letter?"
+)
+
+(defun to-lower ((arg char))
+	(tochar (+ (- char 'A') 'a'))
+	"Convert char to the lower case equivilent. Assumes \(is-capital char) is true."
+)
+
+(defun transform-last ((arg str)) 
+	(let ((last (strind str (- (strlen str) 1))))
+		(strcat
+			(substr str 0 (- (strlen str) 1))
+			(if (= last '┐') "┬"
+				(if (= last '┤') "┼"
+					(if (= last '┘') "┴"
+						last
+					)
+				)
+			)
+		)
+	)
+	"Transform the last character in the string into the extended version."
+)
+
+(defun encode-character ((arg char))
+	(if (is-capital char) 
+		(strcat
+			(transform-last @globals.encoding-table.(to-lower char))
+			"◄"
+		)
+		(strcat	@globals.encoding-table.(char) " ")
+	)
+	"Encode a character into a cipher sequence."
+)
+
+(defun encode-string ((arg str))
+	(let (
+		(prev-space true)
+		(next-space true)
+		)
+		(strcat
+			$(mapi i 0 (strlen str)
+				(let ((cur-char (strind str i)))
+					(if (= cur-char ' ')
+						(lastarg
+							(var prev-space true)
+							"     "
+						)
+						(lastarg
+							(var next-space (|| (= i (- (strlen str) 1)) (= (strind str (+ i 1)) ' ')))
+							(strcat
+								(
+									(if (&& prev-space next-space) "►"
+										(if prev-space "┌"
+											(if next-space "└" "├")
+										)
+									)
+									(var prev-space false)
+								)
+								(encode-character cur-char)
+							)
+						)
+					)
+				)
+			)
+		)
+	)
+	"Encode a string into a sequence of cipher characters. Set the lead characters correctly so that the text, when arranged in tabular form, has properly connected words."
+)
+
+(defun max ((arg-repeat values))
+	(let ((max- (first values)))
+		(lastarg
+			(for value values (if (> value max-) (var max- value)))
+			max-
+		)
+	)
+	"Find the maximum value in a list of values."
+)
+
+(defun tabulate ((arg pieces))
+	(strcat
+		$(mapi counter 0 (max $(map piece pieces (/ (strlen piece) 5)))
+			(strcat
+				$(map piece pieces
+					(strcat
+						(if (< (* 5 counter) (strlen piece)) /*Pieces are not all the same lenth.*/
+							(let ((bit (substr piece (* 5 counter) 5)))
+								(strcat bit " ")
+							)
+							"      "
+						)
+					)
+				)
+				"\n"
+			)
+		)	
+	)
+	"Arrange segmented text in tabular form"
+)
+
+(defun encode-paragraph ((arg segments))
+	(reverse (map word segments (encode-string word)))
+)
+
+(defun write-to-file ((arg file-name)(arg text))
+	(let ((_file (file.open file-name "WRITE") (file.close _file)))
+   		(file.write _file text)
+    )
+    "Create a file containing the text"
+)
+
+(defun encode-and-tabulate ((arg text-items))
+	(tabulate (encode-paragraph text-items))
+)
+
+(defun word-split ((arg string)(arg segment-length))
+	(let (
+		(words (split string " "))
+		(result ^())
+		(current "")
+		)
+		(lastarg
+			(for word words
+				(if (<= (+ (strlen current) (strlen word) 1) segment-length)
+					(var current (strcat current (if (!= current "") " " "") word))
+					(nop
+						(var result (cat result current))
+						(var current word)
+					)
+				)
+			)
+			(if (!= current "") (var result (cat result current)))
+			result
+		)
+	)
+)
+
+
+(defun encodei ((arg text-items))
+	(strcat "[cipher][fixed letter spacing]" (encode-and-tabulate text-items) "[variable letter spacing][normal]")
+)
+
+(defun encode ((arg text-items))
+	(unescape (encode-and-tabulate text-items))
+)
+
+(defun i-text ((arg name)(arg text-items))
+	(unescape "The cipher-(name) is some text which varies.\nThe cipher-(name) is \"(encodei text-items)\".\n\n")
+)
+
+
+(print @globals.encoding-table.mape "\n" @globals.encoding-table.base "\n")
+(print "\n\n" (encode-string "Hello World!") "\n\n")
+/*
+(write-to-file "cipher-text.txt" 
+	(strcat
+		(i-text "fox" ^("The quick" "brown Fox" "jumps over" "the lazy" "Dog..."))
+		(i-text "dead" ^("You" "are" "dead."))
+		(i-text "turn-it-off" ^("Turn" "it" "off!"))
+		(i-text "waiting" ^("I am" "waiting" "on the" "Other" "Side"))
+		(i-text "hand" ^("Take" "my" "hand"))
+		(i-text "wake" ^("Wake" "up" "child"))
+		(i-text "abc" ^("a b c d e" "f g h i j" "k l m n o" "p q r s t" "u v w x y z"))
+	)
+)
+*/
+
+(defun pc ((arg str)) (print (encode (word-split str 10))))
+
+(print (encode (word-split "The quick brown Fox jumps over the lazy Dog." 10)))

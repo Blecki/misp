@@ -19,6 +19,7 @@ namespace MISP
         public EvaluationState evaluationState;
         public ScriptObject errorObject = null;
         public Object breakObject = null;
+        public Object tag = null;
 
         public Object UnBreak()
         {

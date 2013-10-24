@@ -1,0 +1,953 @@
+/*Dataset creation, saving, and loading functions.*/
+
+(defun save-data ((arg data)(arg file-name))
+   (let ((_file (file.open file-name "WRITE") (file.close _file)))
+      (file.write _file (serialize data))
+   )
+   "Save a script object to disc."
+)
+
+(defun load-data ((arg file-name))
+   (let (
+      (_file (file.open file-name "READ") (file.close _file))
+      (contents (file.read-all _file))
+      )
+      (:contents)
+   )
+)
+
+(defun write-to-file ((arg file-name)(arg text))
+   (let ((_file (file.open file-name "WRITE") (file.close _file)))
+      (file.write _file text)
+   )
+   "Save a script object to disc."
+)
+
+/* Setup e-table */
+
+(defun etable-entry ((arg name)(arg low)(arg high))
+   (record (name name)(low low)(high high))
+)
+
+(defun prepare-etable ()
+   (^(
+      (etable-entry "48k" (evaluation-to-minutes 57 00) (evaluation-to-minutes 57 36) )
+      (etable-entry "47k" (evaluation-to-minutes 55 48) (evaluation-to-minutes 56 59) )
+      (etable-entry "46k" (evaluation-to-minutes 54 36) (evaluation-to-minutes 55 47) )
+      (etable-entry "45k" (evaluation-to-minutes 53 24) (evaluation-to-minutes 54 35) )
+      (etable-entry "44k" (evaluation-to-minutes 52 12) (evaluation-to-minutes 53 23) )
+      (etable-entry "43k" (evaluation-to-minutes 51 00) (evaluation-to-minutes 52 11) )
+      (etable-entry "42k" (evaluation-to-minutes 49 48) (evaluation-to-minutes 50 59) )
+      (etable-entry "41k" (evaluation-to-minutes 48 36) (evaluation-to-minutes 49 47) )
+      (etable-entry "40k" (evaluation-to-minutes 47 24) (evaluation-to-minutes 48 35) )
+      (etable-entry "46j" (evaluation-to-minutes 49 38) (evaluation-to-minutes 50 43) )
+      (etable-entry "45j" (evaluation-to-minutes 48 33) (evaluation-to-minutes 49 37) )
+      (etable-entry "44j" (evaluation-to-minutes 47 28) (evaluation-to-minutes 48 32) )
+      (etable-entry "43j" (evaluation-to-minutes 46 22) (evaluation-to-minutes 47 27) )
+      (etable-entry "42j" (evaluation-to-minutes 45 16) (evaluation-to-minutes 46 21) )
+      (etable-entry "41j" (evaluation-to-minutes 44 11) (evaluation-to-minutes 45 15) )
+      (etable-entry "46h" (evaluation-to-minutes 45 30) (evaluation-to-minutes 46 29) )
+      (etable-entry "45h" (evaluation-to-minutes 44 30) (evaluation-to-minutes 45 29) )
+      (etable-entry "44h" (evaluation-to-minutes 43 30) (evaluation-to-minutes 44 29) )
+      (etable-entry "43h" (evaluation-to-minutes 42 30) (evaluation-to-minutes 43 29) )
+      (etable-entry "42h" (evaluation-to-minutes 41 30) (evaluation-to-minutes 42 29) )
+      (etable-entry "41h" (evaluation-to-minutes 40 30) (evaluation-to-minutes 41 29) )
+      (etable-entry "40h" (evaluation-to-minutes 39 30) (evaluation-to-minutes 40 29) )
+      (etable-entry "39h" (evaluation-to-minutes 38 30) (evaluation-to-minutes 39 29) )
+      (etable-entry "38h" (evaluation-to-minutes 37 30) (evaluation-to-minutes 38 29) )
+      (etable-entry "37a" (evaluation-to-minutes 36 30) (evaluation-to-minutes 37 29) )
+      (etable-entry "36a" (evaluation-to-minutes 35 30) (evaluation-to-minutes 36 29) )
+      (etable-entry "35a" (evaluation-to-minutes 34 30) (evaluation-to-minutes 35 29) )
+      (etable-entry "34a" (evaluation-to-minutes 33 30) (evaluation-to-minutes 34 29) )
+      (etable-entry "33a" (evaluation-to-minutes 32 30) (evaluation-to-minutes 33 29) )
+      (etable-entry "32a" (evaluation-to-minutes 31 30) (evaluation-to-minutes 32 29) )
+      (etable-entry "31a" (evaluation-to-minutes 30 30) (evaluation-to-minutes 31 29) )
+      (etable-entry "30a" (evaluation-to-minutes 29 30) (evaluation-to-minutes 30 29) )
+      (etable-entry "29a" (evaluation-to-minutes 28 30) (evaluation-to-minutes 29 29) )
+      (etable-entry "28a" (evaluation-to-minutes 27 30) (evaluation-to-minutes 28 29) )
+      (etable-entry "27a" (evaluation-to-minutes 26 30) (evaluation-to-minutes 27 29) )
+      (etable-entry "26a" (evaluation-to-minutes 25 30) (evaluation-to-minutes 26 29) )
+      (etable-entry "25a" (evaluation-to-minutes 24 30) (evaluation-to-minutes 25 29) )
+      (etable-entry "24a" (evaluation-to-minutes 23 30) (evaluation-to-minutes 24 29) )
+      (etable-entry "23a" (evaluation-to-minutes 22 30) (evaluation-to-minutes 23 29) )
+      (etable-entry "22a" (evaluation-to-minutes 21 30) (evaluation-to-minutes 22 29) )
+      (etable-entry "21a" (evaluation-to-minutes 20 30) (evaluation-to-minutes 21 29) )
+      (etable-entry "20a" (evaluation-to-minutes 19 30) (evaluation-to-minutes 20 29) )
+      (etable-entry "19a" (evaluation-to-minutes 18 30) (evaluation-to-minutes 19 29) )
+      (etable-entry "18a" (evaluation-to-minutes 17 30) (evaluation-to-minutes 18 29) )
+      (etable-entry "17a" (evaluation-to-minutes 16 30) (evaluation-to-minutes 17 29) )
+      (etable-entry "16a" (evaluation-to-minutes 15 30) (evaluation-to-minutes 16 29) )
+      (etable-entry "15a" (evaluation-to-minutes 14 30) (evaluation-to-minutes 15 29) )
+      (etable-entry "14a" (evaluation-to-minutes 13 30) (evaluation-to-minutes 14 29) )
+      (etable-entry "13a" (evaluation-to-minutes 12 30) (evaluation-to-minutes 13 29) )
+      (etable-entry "12a" (evaluation-to-minutes 11 30) (evaluation-to-minutes 12 29) )
+      (etable-entry "SCP" (evaluation-to-minutes 0  0 ) (evaluation-to-minutes 11 29) )
+   ))
+)
+
+(defun evaluation-to-minutes ((arg h) (arg m)) 
+   (+ (* h 60 ) m )
+)
+
+(defun minutes-to-string-evaluation ((arg minutes))
+   (format "{0,2:##}:{1:00}" (floor (/ minutes 60)) (% minutes 60))
+)
+
+(defun ename ((arg e)(arg data))
+   ((first @globals.etable entry (<= entry.low e)).name)
+)
+
+(set @globals etable (prepare-etable))
+
+
+(defun prepare-zone ((arg zipcode)(arg withdrawal))
+   (record 
+      (zipcode zipcode)
+      (routes ^())
+      (withdrawal withdrawal)
+   )
+)
+
+/* Functions for creating data */
+
+(defun make-route 
+   (
+      (arg number)
+      (arg box-factor)
+      (arg l-factor) 
+      (arg evaluation)
+      (arg target)
+   )
+   (record 
+      (n number)
+      (box-factor box-factor)
+      (l-factor l-factor)
+      (evaluation evaluation)
+      (target target)
+      (post-segments ^())
+      (pre-segments ^())
+   )
+)
+
+(defun make-segment ((arg route) (arg miles) (arg rboxes) (arg cboxes) (arg comment))
+   (record 
+      (current-route route)
+      (source-route route) 
+      (miles miles) 
+      (regular-boxes rboxes) 
+      (centralized-boxes cboxes)
+      (comment comment)
+      (scheme ^())
+   )
+)
+
+(defun make-scheme-entry ((arg street-name)(arg low)(arg high)(arg type)(arg boxes))
+   (record
+      (street-name street-name)
+      (low low)
+      (high high)
+      (type type)
+      (boxes boxes)
+   )
+)
+
+(defun get-route ((arg number) (arg data))
+   (coalesce
+      (first (where r data.routes (= number r.n)))
+      (raise-error (format "Could not find route R{0,3:000}" number))
+   )
+)
+
+(defun get-segment ((arg route-number)(arg segment-number)(arg data))
+   (coalesce
+      (index (get-route route-number data).pre-segments segment-number)
+      (raise-error (format "Could not find segment number {0} on R{1,3:0000}" segment-number route-number))
+   )
+)
+
+/* Value calculating functions */
+
+(defun get-route-box-factor ((arg route))
+   (+ route.box-factor route.l-factor)
+)
+
+(defun get-route-centralized-factor ((arg route))
+   (+ route.box-factor 1)
+)
+
+(defun segment-value ((arg segment))
+   (+ 
+      (* segment.miles 12.0) 
+      (* segment.regular-boxes (get-route-box-factor segment.source-route))
+      (* segment.centralized-boxes (get-route-centralized-factor segment.source-route))
+      (* (coalesce segment.parcel-lockers 0) 2)
+      (coalesce segment.collection-slots 0)
+      (coalesce segment.raw-value 0)
+      (* (coalesce segment.dismounts 0) 0.1)
+      (* (coalesce segment.dismount-distance 0) 0.00429)
+   )
+)
+
+(defun calculate-new-evaluation ((arg route) (arg data))
+   /* Take the route's base evaluation and add all the post-segments that don't already belong to it,
+      then subtract all the pre-segments that were moved somewhere else. */
+   (-
+      (+
+         route.evaluation
+         $(map segment 
+            (where segment route.post-segments (!= segment.source-route route)) 
+            (segment-value segment))
+      )
+      (+
+         $(map segment 
+            (where segment route.pre-segments (!= segment.current-route route)) 
+            (segment-value segment))
+      )
+   )
+)
+
+(defun calculate-raw-evaluation ((arg route)(arg data)(arg box-report))
+   (let (
+      (totals (get-box-report-totals box-report))
+      (entries (map entry (members box-report) (box-report.(entry))))
+      )
+      (+
+         30 /* Withdrawal */
+         36 /* Misc office time */
+         20 /* Stamp stock */
+         18 /* Unload/reload */
+         24 /* Base LLV time */
+         (if (> 6 (* (coalesce route.miles 0) (/ 6.0 100.0) 4.5))
+            6
+            (* (coalesce route.miles 0) (/ 6.0 100.0) 4.5)
+         ) /* Refuel allowance */
+         (* (coalesce route.miles 0) 12)
+         $(map entry entries (* entry.regular-boxes (+ entry.source.box-factor route.l-factor)))
+         $(map entry entries (* entry.centralized-boxes (get-route-centralized-factor entry.source)))
+         totals.collection-slots
+         (* totals.parcel-lockers 2)
+         (* totals.dismounts 0.1)
+         (* totals.dismount-distance 0.00429)
+         (coalesce route.suitable-allowance 0)
+         (* 30 (coalesce route.locked-pouch-stops 0))
+      )
+   )
+)
+
+(defun prepare-box-table-entry ((arg table)(arg source-route))
+   (if (= table."(source-route.n)" null) 
+      (set table "(source-route.n)" 
+         (record 
+            (regular-boxes 0) 
+            (centralized-boxes 0) 
+            (dismounts 0)
+            (dismount-distance 0)
+            (collection-slots 0)
+            (parcel-lockers 0)
+            (source source-route)
+         )
+      )
+   )
+)
+
+(defun add-report-item ((arg table-entry)(arg item-name)(arg new-value))
+   (set table-entry "(item-name)" (+ table-entry."(item-name)" (coalesce new-value 0)))
+)
+
+(defun find-total-left ((arg route)(arg item-name)(arg segments))
+   (- 
+      (coalesce route."(item-name)" 0)
+      (+ $(map segment segments (coalesce segment."(item-name)" 0)))
+   )
+)
+
+(defun add-total-left ((arg table-entry)(arg route)(arg item-name))
+   (add-report-item table-entry item-name 
+      (find-total-left route item-name 
+         (where segment route.pre-segments (!= segment.current-route route))
+      )
+   )
+)
+
+(defun prepare-box-report ((arg route))
+   (let ((table (record)))
+      (lastarg
+         (prepare-box-table-entry table route)
+         (let ((host table."(route.n)"))
+            (nop
+               (add-total-left host route "regular-boxes")
+               (add-total-left host route "centralized-boxes")
+               (add-total-left host route "dismounts")
+               (add-total-left host route "dismount-distance")
+               (add-total-left host route "collection-slots")
+               (add-total-left host route "parcel-lockers")
+            )
+         )
+
+         (for segment 
+            (where segment route.post-segments (!= segment.source-route route))
+            (nop
+               (prepare-box-table-entry table segment.source-route)
+               (let ((entry table."(segment.source-route.n)"))
+                  (nop
+                     (add-report-item entry "regular-boxes" segment.regular-boxes)
+                     (add-report-item entry "centralized-boxes" segment.centralized-boxes)
+                     (add-report-item entry "dismounts" segment.dismounts)
+                     (add-report-item entry "dismount-distance" segment.dismount-distance)
+                     (add-report-item entry "collection-slots" segment.collection-slots)
+                     (add-report-item entry "parcel-lockers" segment.parcel-lockers)
+                  )
+               )
+            )
+         )
+
+         table /* Returns the completed table */
+      )
+   )
+)
+
+(defun get-box-report-totals ((arg box-report))
+   (let ((entries (map entry-name (members box-report) (box-report.(entry-name)))))
+      (record 
+         (regular-boxes (sum "regular-boxes" entries))
+         (centralized-boxes (sum "centralized-boxes" entries))
+         (collection-slots (sum "collection-slots" entries))
+         (parcel-lockers (sum "parcel-lockers" entries))
+         (dismounts (sum "dismounts" entries))
+         (dismount-distance (sum "dismount-distance" entries))
+      )
+   )
+)
+
+/* Printing functions */
+
+(defun sum ((arg member-name)(arg list))
+   (+ $(map i list (i.(member-name))))
+)
+
+(defun fittab ((arg string) (arg tab-size))
+   (if (> (strlen string) tab-size) 
+      (substr string 0 tab-size) 
+      (strcat string $(array (- tab-size (strlen string)) (" ")))
+   )
+)
+
+(defun format-route-stats ((arg route) (arg data) (arg-optional accumulator))
+   (let 
+      (
+         (new-evaluation (calculate-new-evaluation route data))
+         (raw-eval (calculate-raw-evaluation route data (prepare-box-report route)))
+      )
+      (lastarg
+         (if (!= accumulator null)
+            (nop
+               (set accumulator pre (+ route.evaluation (coalesce accumulator.pre 0)))
+               (if (! route.eliminated)
+                  (nop
+                     (set accumulator post (+ (if route.ignored route.evaluation new-evaluation) (coalesce accumulator.post 0)))
+                     (set accumulator raw (+ (if route.ignored route.evaluation raw-eval) (coalesce accumulator.raw 0)))
+                  )
+               )
+            )
+         )
+         (if (|| route.ignored route.eliminated)
+            (format 
+               "R{0:000} | EVAL: PRE {1} \({2})  {3}\n"
+               route.n
+               (minutes-to-string-evaluation route.evaluation)
+               (ename route.evaluation data)
+               (if route.eliminated "ELIMINATE" "IGNORE   ")
+            )
+            (format 
+               "R{0:000} | EVAL: PRE {1} \({2})  TARGET {3} \({4})  POST {5} \({6}) RAW {7} \({8}) VARIANCE {9}\n"
+               route.n
+               (minutes-to-string-evaluation route.evaluation)
+               (ename route.evaluation data)
+               (minutes-to-string-evaluation route.target)
+               (ename route.target data)
+               (minutes-to-string-evaluation new-evaluation)
+               (ename new-evaluation data)
+               (minutes-to-string-evaluation raw-eval)
+               (ename raw-eval data)         
+               (- raw-eval new-evaluation)
+            )
+         )
+      )
+   )
+)
+
+(defun format-route-stats-salmon ((arg route) (arg data) (arg-optional accumulator))
+   (let 
+      (
+         (new-evaluation (calculate-new-evaluation route data))
+         (raw-eval (calculate-raw-evaluation route data (prepare-box-report route)))
+      )
+      (lastarg
+         (if (!= accumulator null)
+            (nop
+               (set accumulator pre (+ route.evaluation (coalesce accumulator.pre 0)))
+               (if (! route.eliminated)
+                  (nop
+                     (set accumulator post (+ (if route.ignored route.evaluation new-evaluation) (coalesce accumulator.post 0)))
+                     (set accumulator raw (+ (if route.ignored route.evaluation raw-eval) (coalesce accumulator.raw 0)))
+                  )
+               )
+            )
+         )
+         (if (|| route.ignored route.eliminated)
+            (format 
+               "R{0:000} | EVAL: PRE {1} \({2})  {3}\n"
+               route.n
+               (minutes-to-string-evaluation route.evaluation)
+               (ename route.evaluation data)
+               (if route.eliminated "ELIMINATE" "IGNORE   ")
+            )
+            (format 
+               "R{0:000} | EVAL: PRE {1} \({2}) POST {3} \({4})\n"
+               route.n
+               (minutes-to-string-evaluation route.evaluation)
+               (ename route.evaluation data)
+               (minutes-to-string-evaluation raw-eval)
+               (ename raw-eval data)         
+            )
+         )
+      )
+   )
+)
+
+(defun format-segment-stats ((arg segment)(arg diff-sign))
+   (format "{0}{1,7:######.00} : {2} | PRE: R{3:000} POST: R{4:000} | MILES:{5,5:##.00} RB:{6,3:###} CB:{7,4:####} | CS:{8,2:##} PL:{9,2:##} DIS:{10,2:##} DIS-FT:{11,4:####}\n"
+      (if (= segment.current-route segment.source-route) " " diff-sign)
+      (segment-value segment)
+      (fittab segment.comment 32)
+      segment.source-route.n
+      segment.current-route.n
+      segment.miles
+      segment.regular-boxes
+      segment.centralized-boxes
+      segment.collection-slots
+      segment.parcel-lockers
+      segment.dismounts
+      segment.dismount-distance
+   )
+)
+
+
+(defun format-route ((arg route)(arg data))
+   (let 
+      (
+         (box-report (prepare-box-report route))
+         (raw-eval (calculate-raw-evaluation route data box-report))
+         (box-totals (get-box-report-totals box-report))
+      )
+      (strcat
+         "\n"
+         (format-route-stats route data)
+         (strcat (coalesce route.notes "") "\n")
+         (format "Base: box-factor: {0} l-factor: {1} regular-boxes: {2} centralized-boxes: {3} locked-pouch: {5} miles: {4}\n"
+            route.box-factor
+            route.l-factor
+            route.regular-boxes
+            route.centralized-boxes
+            route.miles
+            route.locked-pouch-stops
+         )
+         (format "    : CS:{0,3:###} PL:{1,3:###} DISMOUNTS:{2,3:###} DISMOUNT-DISTANCE:{3,4:#####} SUITABLE-ALLOWANCE:{4,5:00.00} BPM:{5,6:000.00}\n"
+            route.collection-slots
+            route.parcel-lockers
+            route.dismounts
+            route.dismount-distance
+            route.suitable-allowance
+            (/ (+ box-totals.regular-boxes box-totals.centralized-boxes) route.miles)
+         )
+         "Pre-adjustment segments\n"
+         $(mapi segment-id 0 (length route.pre-segments)
+            (strcat 
+               (format "{0,2} " segment-id)
+               (format-segment-stats (index route.pre-segments segment-id) "-")
+            )
+         )
+         (format "   Total change: -{0:###0.00}\n" 
+            (+ 
+               $(map segment 
+                  (where segment route.pre-segments (!= segment.current-route segment.source-route))
+                  (segment-value segment)
+               )
+            )
+         )
+         "Post-adjustment segments\n"
+         $(mapi segment-id 0 (length route.post-segments)
+            (strcat 
+               (format "{0,2} " segment-id)
+               (format-segment-stats (index route.post-segments segment-id) "+")
+            )
+         )
+         (format "   Total change: +{0:###0.00}\n" 
+            (+ 
+               $(map segment 
+                  (where segment route.post-segments (!= segment.current-route segment.source-route))
+                  (segment-value segment)
+               )
+            )
+         )
+         "Box report\n"
+         (format-box-report box-report)
+         "\n"
+         (format "ROUTE ADJUSTMENT WORKBOOK RESULT PREDICTION: {0} \({1})\n"
+            (minutes-to-string-evaluation raw-eval)
+            (ename raw-eval data)
+         )
+         (format "PREV IN HUNDRETHS: {0}\n" (/ route.evaluation 60.0))
+      )
+   )
+)
+
+(defun format-route-scheme ((arg route))
+   (strcat
+      (format "Detailed scheme for route {0}\n\n" route.n)
+      $(mapi segment-id 0 (length route.pre-segments)
+         (let (
+            (segment (index route.pre-segments segment-id))
+            (total-boxes (sum "boxes" segment.scheme))
+            )
+            (strcat 
+               (format "{0,2}" segment-id)
+               (format-segment segment) 
+               (format "Total boxes: {0}" total-boxes)
+               (if (!= total-boxes (+ segment.regular-boxes segment.centralized-boxes))
+                  " WARNING: SCHEME BOX TOTAL DOES NOT MATCH\n\n"
+                  "\n\n"
+               )
+            )
+         )
+      )
+   )
+)
+
+(defun format-routes ((arg data))
+   (let ((accumulator (record)))
+      (strcat
+         (format "Total Routes: {0}\n" (length data.routes))
+         $(map route data.routes (format-route-stats route data accumulator))
+         (format "TOTALS: PRE: {0}:{1,2:00} POST: {2}:{3,2:00} RAW: {4}:{5,2:00}\n"
+            (floor (/ accumulator.pre 60))
+            (% accumulator.pre 60)
+            (floor (/ accumulator.post 60))
+            (% accumulator.post 60)
+            (floor (/ accumulator.raw 60))
+            (% accumulator.raw 60)
+         )
+         (format "PREDICTED SAVINGS: {0}:{1,2:00} ACTUAL: {2}:{3,2:00} VARIANCE:{4}\n"
+            (floor (/ (- accumulator.pre accumulator.post) 60))
+            (% (- accumulator.pre accumulator.post) 60)
+            (floor (/ (- accumulator.pre accumulator.raw) 60))
+            (% (- accumulator.pre accumulator.raw) 60)
+            (- accumulator.raw accumulator.post)
+         )
+      )
+   )
+)
+
+(defun format-routes-salmon ((arg data))
+   (let ((accumulator (record)))
+      (strcat
+         (format "Total Routes: {0}\n" (length data.routes))
+         $(map route data.routes (format-route-stats-salmon route data accumulator))
+         (format "TOTALS: PRE: {0}:{1,2:00} POST: {2}:{3,2:00}\n"
+            (floor (/ accumulator.pre 60))
+            (% accumulator.pre 60)
+            (floor (/ accumulator.raw 60))
+            (% accumulator.raw 60)
+         )
+         (format "PREDICTED SAVINGS: {0}:{1,2:00}\n"
+            (floor (/ (- accumulator.pre accumulator.raw) 60))
+            (% (- accumulator.pre accumulator.raw) 60)
+         )
+      )
+   )
+)
+
+(defun format-scheme-entry ((arg entry))
+   (format "{0} | {1,4} to {2,4}, {3}.  Boxes: {4,4}\n"
+      (fittab entry.street-name 32)
+      entry.low
+      entry.high
+      entry.type
+      entry.boxes
+   )
+)
+
+(defun format-scheme-entry-csv ((arg entry))
+   (format "{0},,{1},{2},{3},{4}\n"
+      entry.street-name
+      (if (= entry.low 0) 1 entry.low)
+      entry.high
+      entry.type
+      entry.boxes
+   )
+)
+
+(defun format-segment ((arg segment))
+   (strcat
+      (format-segment-stats segment " ")
+      $(map entry segment.scheme (format-scheme-entry entry))
+   )
+)
+
+(defun format-box-report ((arg box-report))
+   (strcat
+      $(map entry (members box-report)
+         (format "R{0:000} BOXES: {1,4:####} BF: {2,4:#.00} | CS: {3,2:##} pl: {4,2:##} dis: {5,3:###} dis-distance: {6,5:#####}\n"
+            (atoi entry)
+            (+ box-report."(entry)".regular-boxes box-report."(entry)".centralized-boxes)
+            box-report."(entry)".source.box-factor
+            box-report."(entry)".collection-slots
+            box-report."(entry)".parcel-lockers
+            box-report."(entry)".dismounts
+            box-report."(entry)".dismount-distance
+         )
+      )
+      (let ((entries (map entry-name (members box-report) (box-report.(entry-name)))))
+         (format "TOT  REG-BOXES: {0,3:####} CENT-BOXES: {1,4:####} |                   | CS: {2,2:##} pl: {3,2:##} dis: {4,3:###} dis-distance: {5,5:#####}\n"
+            (sum "regular-boxes" entries)
+            (sum "centralized-boxes" entries)
+            (sum "collection-slots" entries)
+            (sum "parcel-lockers" entries)
+            (sum "dismounts" entries)
+            (sum "dismount-distance" entries)
+         )
+      )
+   )
+)
+
+
+/* List manipulation functions */
+
+(defun remove-from-list ((arg item)(arg list))
+   (where i list (!= i item))
+)
+
+(defun remove-from-member-list ((arg object)(arg item)(arg list-name))
+   (set object (list-name) (remove-from-list item object.(list-name)))
+)
+
+(defun append-to-member-list ((arg object)(arg item)(arg list-name))
+   (set object (list-name) (cat object.(list-name) ^(item)))
+)
+
+(defun add-new-route ((arg route-number)(arg box-factor)(arg l-factor)(arg evaluation)(arg target)(arg data))
+   (append-to-member-list data 
+      (make-route route-number box-factor l-factor evaluation target)
+      "routes"
+   )
+)
+
+(defun add-new-segment ((arg segment))
+   (nop
+      (append-to-member-list segment.source-route segment "pre-segments")
+      (append-to-member-list segment.current-route segment "post-segments")
+   )
+)
+
+(defun move-segment ((arg segment)(arg destination-route))
+   (nop
+      (remove-from-member-list segment.current-route segment "post-segments")
+      (append-to-member-list destination-route segment "post-segments")
+      (set segment "current-route" destination-route)
+   )
+)
+
+(defun load ((arg zone))
+   (set @globals data (load-data "(zone).adj"))
+)
+
+(defun save ()
+   (save-data @globals.data "(@globals.data.zipcode).adj")
+)
+
+(defun new-zone ((arg zone))
+   (set @globals data (prepare-zone zone 30))
+)
+
+(defun new-route ((arg route-number)(arg box-factor)(arg l-factor)(arg hours)(arg minutes))
+   (nop
+      (add-new-route route-number box-factor l-factor (evaluation-to-minutes hours minutes)
+         (evaluation-to-minutes 48 0) @globals.data)
+      (clear)
+      (status)
+   )
+)
+
+(defun new-segment ((arg route-number) (arg miles) (arg rboxes) (arg cboxes) (arg comment))
+   (let ((segment (make-segment (get-route route-number @globals.data) miles rboxes cboxes comment)))
+      (lastarg
+         (add-new-segment segment)
+         (segment-value segment)
+      )
+   )
+)
+
+(defun new-cs-segment ((arg route-number) (arg cslots) (arg plockers) (arg comment))
+   (let ((segment (make-segment (get-route route-number @globals.data) 0 0 0 comment)))
+      (nop
+         (set segment collection-slots cslots)
+         (set segment parcel-lockers plockers)
+         (add-new-segment segment)
+      )
+   )
+)
+
+(defun new-raw-segment ((arg route-number)(arg raw-value)(arg comment))
+   (let ((segment (make-segment (get-route route-number @globals.data) 0 0 0 comment)))
+      (set segment raw-value raw-value)
+   )
+)
+
+(defun move (
+   (arg source-route-number)
+   (arg source-segment-number)
+   (arg destination-route-number))
+   (move-segment 
+      (get-segment source-route-number source-segment-number @globals.data) 
+      (get-route destination-route-number @globals.data)
+   )
+)
+
+(defun delete-segment (
+   (arg source-route-number)
+   (arg source-segment-number))
+   (let (
+      (segment (get-segment source-route-number source-segment-number @globals.data))
+      )
+      (nop
+         (remove-from-member-list segment.current-route segment "post-segments")
+         (remove-from-member-list segment.source-route segment "pre-segments")
+      )
+   )
+)
+
+(defun status ()
+   (print (format-routes @globals.data))
+)
+
+(defun status-salmon ()
+   (print (format-routes-salmon @globals.data))
+)
+
+(defun route-status ((arg route-number))
+   (print (format-route (get-route route-number @globals.data) @globals.data))
+)
+
+(defun eliminate ((arg route-number))
+   (nop
+      (set (get-route route-number @globals.data) target 0)
+      (set (get-route route-number @globals.data) eliminated true)
+      (clear)
+      (status)
+   )
+)
+
+(defun ignore ((arg route-number))
+   (nop
+      (set (get-route route-number @globals.data) ignored true)
+      (clear)
+      (status)
+   )
+)
+
+
+(defun set-boxes ((arg route-number)(arg regular-boxes)(arg centralized-boxes))
+   (let ((route (get-route route-number @globals.data)))
+      (nop
+         (set route regular-boxes regular-boxes)
+         (set route centralized-boxes centralized-boxes)
+      )
+   )
+)
+
+(defun set-slots ((arg route-number)(arg collection-slots)(arg parcel-lockers))
+   (let ((route (get-route route-number @globals.data)))
+      (nop
+         (set route collection-slots collection-slots)
+         (set route parcel-lockers parcel-lockers)
+      )
+   )
+)
+
+(defun set-dis ((arg route-number)(arg dismounts)(arg dismount-distance))
+   (let ((route (get-route route-number @globals.data)))
+      (nop
+         (set route dismounts dismounts)
+         (set route dismount-distance dismount-distance)
+      )
+   )
+)
+
+(defun set-miles ((arg route-number)(arg miles))
+   (set (get-route route-number @globals.data) miles miles)
+)
+
+(defun set-sa ((arg route-number)(arg suitable-allowance))
+   (set (get-route route-number @globals.data) suitable-allowance suitable-allowance)
+)
+
+(defun set-seg-slots ((arg route-number)(arg segment-number)(arg collection-slots)(arg parcel-lockers))
+   (let ((seg (get-segment route-number segment-number @globals.data)))
+      (nop
+         (set seg collection-slots collection-slots)
+         (set seg parcel-lockers parcel-lockers)
+      )
+   )
+)
+
+(defun set-seg-dis ((arg route-number)(arg segment-number)(arg dismounts)(arg dismount-distance))
+   (let ((seg (get-segment route-number segment-number @globals.data)))
+      (nop
+         (set seg dismounts dismounts)
+         (set seg dismount-distance dismount-distance)
+      )
+   )
+)
+
+(defun set-lp ((arg route-number)(arg lp))
+   (set (get-route route-number @globals.data) locked-pouch-stops lp)
+)
+
+(defun box-report ((arg route-number))
+   (print (format-box-report (prepare-box-report (get-route route-number @globals.data))))
+)
+
+(defun scheme ((arg route-number)(arg segment-number)(arg street)(arg low)(arg high)(arg type)(arg boxes))
+   (let ((segment (get-segment route-number segment-number @globals.data)))
+      (nop
+         (append-to-member-list segment (make-scheme-entry street low high type boxes) "scheme")
+         (scheme-status route-number)
+      )
+   )
+)
+
+(defun del-scheme ((arg route-number)(arg segment-number)(arg street))
+   (let ((segment (get-segment route-number segment-number @globals.data)))
+      (nop
+         (set segment scheme (where entry segment.scheme (!= entry.street-name street)))
+         (scheme-status route-number)
+      )
+   )
+)
+
+(defun add-scheme-pair ((arg scheme-table)(arg source-route)(arg destination-route)(arg scheme-data))
+   (nop
+      (if (= scheme-table."(source-route.n)->(destination-route.n)" null)
+         (set scheme-table "(source-route.n)->(destination-route.n)" (record))
+      )
+      (let ((entry scheme-table."(source-route.n)->(destination-route.n)"))
+         (set entry data (cat (coalesce entry.data ^()) scheme-data))
+      )
+   )
+)
+
+(defun prepare-scheme-pairs ((arg data))
+   (let ((table (record)))
+      (lastarg
+         (for route data.routes
+            (for segment (where segment route.post-segments (!= segment.source-route segment.current-route))
+               (add-scheme-pair table segment.source-route segment.current-route segment.scheme)
+            )
+         )
+         table
+      )
+   )
+)
+
+(defun format-scheme-pairs ((arg scheme-table))
+   (strcat 
+      $(map entry (members scheme-table) 
+         (strcat 
+            "(entry)\n"
+            $(map scheme-entry scheme-table.(entry).data (format-scheme-entry scheme-entry))
+            "\n\n"
+         )
+      )
+   )
+)
+
+(defun format-scheme-pairs-csv ((arg scheme-table))
+   (strcat 
+      $(map entry (members scheme-table) 
+         (strcat 
+            "(entry)\n"
+            $(map scheme-entry scheme-table.(entry).data (format-scheme-entry-csv scheme-entry))
+            "\n\n"
+         )
+      )
+   )
+)
+
+(defun scheme-pairs ()
+   (print (format-scheme-pairs (prepare-scheme-pairs @globals.data)))
+)
+
+(defun scheme-status ((arg route-number))
+   (print (format-route-scheme (get-route route-number @globals.data)))
+)
+
+(defun note ((arg route-number)(arg notes))
+   (set (get-route route-number @globals.data) notes notes)
+)
+
+(defun big () 
+   (nop
+      (video-mode true 1280 800)
+      (console-mode 160 40)
+      (status)
+   )
+)
+
+(defun small ()
+   (nop
+      (video-mode false 800 600)
+      (console-mode 80 25)
+      (status)
+   )
+)
+
+(defun dump-data ()
+   (let ((_file (file.open "(@globals.data.zipcode)-dump.txt" "WRITE") (file.close _file)))
+      (nop
+         (file.write _file (unescape (format-routes @globals.data)))
+         (file.write _file (unescape "\n\n"))
+         (for route @globals.data.routes
+            (nop
+               (file.write _file (unescape (format-route route @globals.data)))
+               (file.write _file (unescape "\n"))
+            )
+         )
+         (file.write _file (unescape "-- Scheme pairs --\n"))
+         (file.write _file (unescape (format-scheme-pairs (prepare-scheme-pairs @globals.data))))
+         (print "Data dumped to file.\n")
+      )
+   )
+)
+
+(defun dump-salmon ()
+   (write-to-file "(@globals.data.zipcode)-salmon.txt" (unescape (format-routes-salmon @globals.data)))
+)
+
+(defun dump-scheme ()
+   (write-to-file 
+      "(@globals.data.zipcode)-scheme.csv" 
+      (unescape (format-scheme-pairs-csv (prepare-scheme-pairs @globals.data)))
+   )
+)
+
+(defun check-input ()
+   (for route @globals.data.routes
+      (nop
+         (if (= route.suitable-allowance null) (printf "{0} needs suitable allowance.\n" route.n))
+         (if (|| (= route.regular-boxes null) (= route.centralized-boxes null)) (printf "{0} needs boxes.\n" route.n))
+         (if (|| (= route.collection-slots null) (= route.parcel-lockers null)) (printf "{0} needs slots.\n" route.n))
+         (if (|| (= route.dismounts null) (= route.dismount-distance null)) (printf "{0} needs dismounts.\n" route.n))
+         (if (= route.miles null) (printf "{0} needs miles.\n" route.n))
+      )
+   )
+)

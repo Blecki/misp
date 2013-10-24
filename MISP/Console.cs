@@ -134,6 +134,10 @@ namespace MISP
                     {
                         if (s[place + 1] == 'n')
                             r += '\n';
+                        else if (s[place + 1] == 't')
+                            r += '\t';
+                        else if (s[place + 1] == 'r')
+                            r += '\r';
                         else r += s[place + 1];
                     }                    
                     place += 2;

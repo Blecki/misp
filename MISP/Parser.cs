@@ -350,7 +350,12 @@ namespace MISP
             var state = new ParseState { start = 0, end = script.Length, source = script, filename = filename };
             while (!state.AtEnd())
             {
-                if (state.MatchNext("/*"))
+                if (state.MatchNext("\\/*"))
+                {
+                    commentFree.Append("\\/*");
+                    state.Advance(3);
+                }
+                else if (state.MatchNext("/*"))
                     commentFree.Append(new String(' ',ParseComment(state)));
                 else
                 {

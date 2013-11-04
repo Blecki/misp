@@ -302,7 +302,26 @@ namespace MISP
                 try
                 {
                     if (node.gsp("@token").Contains('.')) result = Convert.ToSingle(node.gsp("@token"));
-                    else result = Convert.ToInt32(node.gsp("@token"));
+                    else
+                    {
+                        var numberString = node.gsp("@token");
+                        if (numberString.StartsWith("0x"))
+                        {
+                            result = Convert.ToInt32(numberString.Substring(2), 16);
+                        }
+                        else if (numberString.StartsWith("0b"))
+                        {
+                            var accumulator = 0;
+                            foreach (var c in numberString.Substring(2))
+                            {
+                                accumulator <<= 1;
+                                if (c == '1') accumulator += 1;
+                            }
+                            result = accumulator;
+                        }
+                        else
+                            result = Int32.Parse(numberString);
+                    }
                 }
                 catch (Exception e)
                 {

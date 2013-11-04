@@ -25,6 +25,11 @@ namespace MISP
             return " \t\r\n".Contains(c);
         }
 
+        public static bool IsHex(char c)
+        {
+            return "0123456789abcdefABCDEF".Contains(c);
+        }
+
         public static void DevourWhitespace(ParseState state)
         {
             while (!state.AtEnd() && " \t\r\n".Contains(state.Next())) state.Advance();
@@ -92,21 +97,41 @@ namespace MISP
         {
             var result = new GenericScriptObject("@type", "number", "@start", state.start, "@source", state);
             bool foundDot = false;
+            var numbertype = 0;
+
+            if (state.MatchNext("0x"))
+            {
+                state.Advance(2);
+                numbertype = 1;
+            }
+            else if (state.MatchNext("0b"))
+            {
+                state.Advance(2);
+                numbertype = 2;
+            }
+            else if (state.Next() == '-')
+            {
+                state.Advance();
+            }
 
             while (!state.AtEnd())
             {
-                if (state.Next() == '-')
-                {
-                    if (asInt(result["@start"]) != state.start) break;
-                    state.Advance();
-                    continue;
-                }
-                if (state.Next() >= '0' && state.Next() <= '9')
+                if (numbertype == 0 && state.Next() >= '0' && state.Next() <= '9')
                 {
                     state.Advance();
                     continue;
                 }
-                else if (state.Next() == '.')
+                else if (numbertype == 1 && IsHex(state.Next()))
+                {
+                    state.Advance();
+                    continue;
+                }
+                else if (numbertype == 2 && (state.Next() == '0' || state.Next() == '1'))
+                {
+                    state.Advance();
+                    continue;
+                }
+                else if (numbertype == 0 && state.Next() == '.')
                 {
                     if (foundDot) break;
                     foundDot = true;
@@ -205,7 +230,13 @@ namespace MISP
             var prefix = ParsePrefix(state);
             if (state.Next() == '"')
             {
-                result = ParseStringExpression(state);
+                if (prefix == "$")
+                {
+                    prefix = "";
+                    result = ParseBasicString(state);
+                }
+                else
+                    result = ParseStringExpression(state);
             }
             else if (state.Next() == '(')
             {
@@ -263,7 +294,7 @@ namespace MISP
             while (!state.AtEnd() && !state.MatchNext(end))
             {
                 DevourWhitespace(state);
-                if (state.Next() == '}')
+                if (state.Next() == '}') //Super-brace
                     return result; 
                 if (!state.AtEnd() && !state.MatchNext(end))
                 {
@@ -275,6 +306,34 @@ namespace MISP
             }
             if (end != null) state.Advance(end.Length);
             return result;
+        }
+
+        public static ScriptObject ParseBasicString(ParseState state)
+        {
+            var result = new GenericScriptObject("@type", "string", "@start", state.start, "@source", state);
+            state.Advance(); //skip quote
+            var piece_start = state.start;
+            while (!state.AtEnd())
+            {
+                if (state.Next() == '\\')
+                {
+                    state.Advance(); //skip the slash.
+                    state.Advance();
+                }
+                else if (state.Next() == '"')
+                {
+                    result["@token"] = state.source.Substring(piece_start, state.start - piece_start);
+                    state.Advance();
+                    result["@end"] = state.start;
+                    return result;
+                }
+                else
+                {
+                    state.Advance();
+                }
+            }
+
+            throw new ParseError("Unexpected end of script inside string expression.", state.currentLine);
         }
 
         public static ScriptObject ParseStringExpression(ParseState state, bool isRoot = false)

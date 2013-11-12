@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MISPConsole", "MISPConsole\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MISP", "MISP\MISP.csproj", "{BA7D4BAE-B4B5-40BC-8E73-6743E260F7BC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Misp2", "Misp2\Misp2.csproj", "{0BB6E197-5933-4A5A-992A-BFFD526899DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,18 @@ Global
 		{BA7D4BAE-B4B5-40BC-8E73-6743E260F7BC}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{BA7D4BAE-B4B5-40BC-8E73-6743E260F7BC}.Release|x64.ActiveCfg = Release|Any CPU
 		{BA7D4BAE-B4B5-40BC-8E73-6743E260F7BC}.Release|x86.ActiveCfg = Release|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Release|x64.ActiveCfg = Release|Any CPU
+		{0BB6E197-5933-4A5A-992A-BFFD526899DB}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

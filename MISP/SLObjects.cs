@@ -117,6 +117,9 @@ namespace MISP
                 {
                     var prop = obj.GetType().GetProperty(ScriptObject.AsString(name));
                     if (prop != null) prop.SetValue(obj, value, null);
+                    else
+                        context.RaiseNewError("Could not find member with name '" + ScriptObject.AsString(name) + "' on object" +
+                            " of type '" + obj.GetType().ToString() + "'", context.currentNode);
                 }
             }
             return value;

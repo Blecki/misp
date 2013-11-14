@@ -35,16 +35,9 @@ namespace MISP
             while (!state.AtEnd() && " \t\r\n".Contains(state.Next())) state.Advance();
         }
 
-        public static int asInt(Object obj)
-        {
-            var r = obj as int?;
-            if (r.HasValue) return r.Value;
-            return 0;
-        }
-
         public static ParseNode ParseToken(ParseState state)
         {
-            var result = new ParseNode("token");
+            var result = new ParseNode(NodeTypes.Token);
             var start = state.start;
             while (!state.AtEnd() && !delimeters.Contains(state.Next())) state.Advance();
             result.Token = state.source.Substring(start, state.start - start);
@@ -54,7 +47,7 @@ namespace MISP
 
         public static ParseNode ParseChar(ParseState state)
         {
-            var result = new ParseNode("char");
+            var result = new ParseNode(NodeTypes.Character);
             var token = "";
 
             state.Advance(); //skip opening '
@@ -87,7 +80,7 @@ namespace MISP
 
         public static ParseNode ParseNumber(ParseState state)
         {
-            var result = new ParseNode("number");
+            var result = new ParseNode(NodeTypes.Number);
             bool foundDot = false;
             var start = state.start;
             var numbertype = 0;
@@ -150,9 +143,9 @@ namespace MISP
 
             //Create an (A B C D) list.
             var nodeList = new LinkedList<AccessChainNode>();
-            for (var n = node; n != null; n = (n.Type == "memberaccess") ? n.Children[1] : null)
+            for (var n = node; n != null; n = (n.Type == NodeTypes.MemberAccess) ? n.Children[1] : null)
             {
-                if (n.Type == "memberaccess")
+                if (n.Type == NodeTypes.MemberAccess)
                     nodeList.AddLast(new AccessChainNode { node = n.Children[0], token = n.Token });
                 else
                     nodeList.AddLast(new AccessChainNode { node = n, token = "" });
@@ -167,7 +160,7 @@ namespace MISP
                 var rhs = nodeList.First();
                 nodeList.RemoveFirst();
 
-                var newNode = new ParseNode("memberaccess");
+                var newNode = new ParseNode(NodeTypes.MemberAccess);
                 newNode.Token = lhs.token;
                 newNode.Children.AddMany(lhs.node, rhs.node);
 
@@ -181,21 +174,28 @@ namespace MISP
             return nodeList.First().node;
         }
 
-        public static String ParsePrefix(ParseState state)
+        public static Prefixes ParsePrefix(ParseState state)
         {
             var next = state.Next();
-            if (next == '*' || next == '^' || next == '$' || next == '.' || next == ':')
-            {
-                state.Advance();
-                return new String(next, 1);
-            }
-            return "";
+            var r = Prefixes.None;
+
+            if (next == '*') r = Prefixes.AsLiteral;
+            else if (next == '$') r = Prefixes.ExpandInPlace;
+            else if (next == '^') r = Prefixes.AsList;
+            else if (next == '.') r = Prefixes.Lookup;
+            else if (next == ':') r = Prefixes.Evaluate;
+
+            if (r != Prefixes.None) state.Advance();
+            return r;
         }
 
         public static ParseNode ParseExpression(ParseState state)
         {
             ParseNode result = null;
+
+            var savePrefix = state.Next();
             var prefix = ParsePrefix(state);
+
             if (state.Next() == '"')
                 result = ParseBasicString(state);
             else if (state.Next() == '(')
@@ -206,16 +206,16 @@ namespace MISP
             {
                 result = ParseNumber(state);
                 //A lone - sign is not a valid number. Interpret it as a token.
-                if (result.Token == "-") result.Type = "token";
+                if (result.Token == "-") result.Type = NodeTypes.Token;
             }
             else
             {
-                if (delimeters.Contains(state.Next()) && !String.IsNullOrEmpty(prefix))
+                if (delimeters.Contains(state.Next()) && prefix != Prefixes.None)
                 {
                     //The prefix is a token.
-                    result = new ParseNode("token");
-                    result.Token = prefix;
-                    prefix = "";
+                    result = new ParseNode(NodeTypes.Token);
+                    result.Token = new String(savePrefix, 1);
+                    prefix = Prefixes.None;
                 }
                 else
                     result = ParseToken(state);
@@ -223,7 +223,7 @@ namespace MISP
              
             if (!state.AtEnd() && (state.Next() == '.' || state.Next() == ':'))
             {
-                var final_result = new ParseNode("memberaccess");
+                var final_result = new ParseNode(NodeTypes.MemberAccess);
                 final_result.Children.Add(result);
                 final_result.Token = new String(state.Next(), 1);;
                 state.Advance();
@@ -241,7 +241,7 @@ namespace MISP
 
         public static ParseNode ParseNode(ParseState state, String start = "(", String end = ")")
         {
-            var result = new ParseNode("node");
+            var result = new ParseNode(NodeTypes.Node);
             if (!state.MatchNext(start)) throw new ParseError("Expected " + start, state.currentLine);
             state.Advance(start.Length);
             while (!state.AtEnd() && !state.MatchNext(end))
@@ -252,7 +252,7 @@ namespace MISP
                 if (!state.AtEnd() && !state.MatchNext(end))
                 {
                     var expression = ParseExpression(state);
-                    if (expression.Type == "memberaccess") expression = ReorderMemberAccessNode(expression);
+                    if (expression.Type == NodeTypes.MemberAccess) expression = ReorderMemberAccessNode(expression);
                     result.Children.Add(expression);
                 }
                 DevourWhitespace(state);
@@ -263,7 +263,7 @@ namespace MISP
 
         public static ParseNode ParseBasicString(ParseState state)
         {
-            var result = new ParseNode("string");
+            var result = new ParseNode(NodeTypes.String);
             state.Advance(); //skip quote
             var piece_start = state.start;
             while (!state.AtEnd())

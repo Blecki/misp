@@ -41,7 +41,7 @@ namespace MISP
         public void ChangeVariable(String name, Object newValue)
         {
             if (!variables.ContainsKey(name)) 
-                throw new ScriptError("Variable does not exist.");
+                throw new ScriptError("Variable '" + name + "' does not exist.");
             var list = variables[name];
             list.RemoveAt(list.Count - 1);
             list.Add(newValue);

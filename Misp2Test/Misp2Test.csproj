@@ -2,18 +2,20 @@
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{0BB6E197-5933-4A5A-992A-BFFD526899DB}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{75EEB9BB-5EF6-4394-A4AE-549A40D62755}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Misp2</RootNamespace>
-    <AssemblyName>Misp2</AssemblyName>
+    <RootNamespace>Misp2Test</RootNamespace>
+    <AssemblyName>Misp2Test</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,7 +24,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -40,29 +43,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompiledFunction.cs" />
-    <Compile Include="Compiler.cs" />
-    <Compile Include="Context.cs" />
-    <Compile Include="BuiltInFunction.cs" />
-    <Compile Include="InvokableFunction.cs" />
-    <Compile Include="InstructionList.cs" />
-    <Compile Include="FunctionSet.cs" />
-    <Compile Include="Instruction.cs" />
-    <Compile Include="StandardLibrary\Map.cs" />
-    <Compile Include="SystemFunction.cs" />
-    <Compile Include="LambdaFunction.cs" />
-    <Compile Include="InstructionSet.cs" />
-    <Compile Include="ParseNode.cs" />
-    <Compile Include="Parser.cs" />
-    <Compile Include="ParseState.cs" />
-    <Compile Include="PrefixCheck.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Scope.cs" />
-    <Compile Include="ScriptError.cs" />
-    <Compile Include="ScriptList.cs" />
-    <Compile Include="ScriptObject.cs" />
-    <Compile Include="Upsert.cs" />
-    <Compile Include="VirtualMachine.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Misp2\Misp2.csproj">
+      <Project>{0BB6E197-5933-4A5A-992A-BFFD526899DB}</Project>
+      <Name>Misp2</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

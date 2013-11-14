@@ -7,30 +7,31 @@ namespace MISP
 {
     internal static class PrefixCheck
     {
-        private static Dictionary<String, List<String>> allowed = null;
+        private static Dictionary<NodeTypes, List<Prefixes>> allowed = null;
         internal static bool CheckPrefix(ParseNode node)
         {
             if (allowed == null)
             {
-                var allTypes = new string[] { "node", "memberaccess", "string", "number", "token" };
-                allowed = new Dictionary<string, List<string>>();
-                foreach (var type in allTypes) allowed.Add(type, new List<string>());
+                allowed = new Dictionary<NodeTypes, List<Prefixes>>();
+                
+                allowed.Add(NodeTypes.Node, new List<Prefixes>());
+                allowed[NodeTypes.Node].Add(Prefixes.ExpandInPlace);
+                allowed[NodeTypes.Node].Add(Prefixes.AsList);
+                allowed[NodeTypes.Node].Add(Prefixes.AsLiteral);
+                allowed[NodeTypes.Node].Add(Prefixes.Lookup);
+                allowed[NodeTypes.Node].Add(Prefixes.Evaluate);
 
-                allowed["node"].Add("$");
-                allowed["node"].Add("^");
-                allowed["node"].Add("*");
-                allowed["node"].Add("#");
-                allowed["node"].Add(":");
+                allowed.Add(NodeTypes.Token, new List<Prefixes>());
+                allowed[NodeTypes.Token].Add(Prefixes.ExpandInPlace);
+                allowed[NodeTypes.Token].Add(Prefixes.Lookup);
+                allowed[NodeTypes.Token].Add(Prefixes.Evaluate);
 
-                allowed["token"].Add("$");
-                allowed["token"].Add("#");
-                allowed["token"].Add(":");
-
-                allowed["string"].Add("*");
-                allowed["string"].Add(":");
+                allowed.Add(NodeTypes.String, new List<Prefixes>());
+                allowed[NodeTypes.String].Add(Prefixes.Lookup);
+                allowed[NodeTypes.String].Add(Prefixes.Evaluate);
             }
 
-            if (String.IsNullOrEmpty(node.Prefix)) return true;
+            if (node.Prefix == Prefixes.None) return true;
             if (allowed.ContainsKey(node.Type)) return allowed[node.Type].Contains(node.Prefix);
             return false;
         }

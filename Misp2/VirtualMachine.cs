@@ -9,6 +9,13 @@ namespace MISP
     {
         public static void Execute(Context context)
         {
+            //When an error represents bad output from the compiler or a built in function,
+            //      an exception is thrown in C#. 
+            //When an error represents faulty input code, an exception is thrown in MISP.
+
+            if (context.CodeContext.InstructionPointer >= context.CodeContext.Code.Count)
+                throw new InvalidOperationException("End of code reached.");
+
             var nextInstruction = context.CodeContext.Code[context.CodeContext.InstructionPointer] as Instruction?;
             context.CodeContext.InstructionPointer += 1;
             if (!nextInstruction.HasValue) throw new InvalidOperationException("Encountered non-code in instruction stream");
@@ -32,6 +39,11 @@ namespace MISP
                 case InstructionSet.LOOKUP:
                     {
                         var name = GetOperand(ins.FirstOperand, context).ToString();
+                        if (!context.Scope.HasVariable(name))
+                        {
+                            Throw(new InvalidOperationException("Could not resolve name '" + name + "'."), context);
+                            break;
+                        }
                         SetOperand(ins.SecondOperand, context.Scope.GetVariable(name), context);
                     }
                     break;
@@ -55,8 +67,19 @@ namespace MISP
                     }
                     break;
                 case InstructionSet.BREAK:
-                    context.CodeContext = (GetOperand(ins.FirstOperand, context) as CodeContext?).Value;
-                    Skip(context); //Skip the instruction stored by BEGIN_LOOP
+                    {
+                        var breakContext = GetOperand(ins.FirstOperand, context);
+                        context.CodeContext = (breakContext as CodeContext?).Value;
+                        Skip(context); //Skip the instruction stored by BEGIN_LOOP
+                    }
+                    break;
+                case InstructionSet.SWAP_TOP:
+                    {
+                        var a = GetOperand(Operand.POP, context);
+                        var b = GetOperand(Operand.POP, context);
+                        SetOperand(Operand.PUSH, a, context);
+                        SetOperand(Operand.PUSH, b, context);
+                    }
                     break;
                 case InstructionSet.BRANCH:
                     {
@@ -90,7 +113,7 @@ namespace MISP
                         if (function is InvokeableFunction)
                             (function as InvokeableFunction).Invoke(context, arguments);
                         else
-                            throw new InvalidOperationException("Can't invoke what isn't invokeable.");
+                            Throw(new InvalidOperationException("Can't invoke what isn't invokeable."), context);
                     }
                     break;
                 case InstructionSet.LAMBDA:
@@ -225,10 +248,46 @@ namespace MISP
 
 #endregion
 
+                #region Error Handling
+                case InstructionSet.CATCH:
+                    {
+                        var returnPoint = new CodeContext(context.CodeContext.Code, context.CodeContext.InstructionPointer - 1);
+                        var handler = GetOperand(ins.FirstOperand, context) as InstructionList;
+                        var code = GetOperand(ins.SecondOperand, context) as InstructionList;
+                        SetOperand(Operand.PUSH, returnPoint, context); //Push the return point
+                        var catchContext = new ErrorHandler(handler, 0, context.ScopeStackDepth);
+                        SetOperand(Operand.PUSH, catchContext, context);
+                        context.CodeContext = new CodeContext(code, 0);
+                    }
+                    break;
+                case InstructionSet.THROW:
+                    {
+                        var errorObject = GetOperand(ins.FirstOperand, context);
+                        Throw(errorObject, context);
+                    }
+                    break;
+                #endregion
+
                 default:
                     throw new NotImplementedException();
             }
 
+        }
+
+        public static void Throw(Object errorObject, Context context)
+        {
+            while (true)
+            {
+                var topOfStack = context.Stack.Pop();
+                if (topOfStack is ErrorHandler)
+                {
+                    var handler = (topOfStack as ErrorHandler?).Value;
+                    context.CodeContext = handler.HandlerCode;
+                    context.TrimScopes(handler.ScopeStackDepth);
+                    context.Scope.PushVariable("error", errorObject);
+                    break;
+                }
+            }
         }
 
         public static void SetOperand(Operand operand, Object value, Context context)

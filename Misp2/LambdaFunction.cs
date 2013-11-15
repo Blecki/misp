@@ -29,6 +29,7 @@ namespace MISP
             r.Opcode = new InstructionList(
                 new InPlace(Code),
                 "POP_SCOPE",        //Cleanup the function when it's finished.
+                "SWAP_TOP",
                 "BREAK POP");
             return r;
         }

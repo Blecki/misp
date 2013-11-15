@@ -9,10 +9,12 @@ namespace Misp2Test
     {
         static void Main(string[] args)
         {
-            var code = "((lambda (\"foo\") (print foo)) \"Hello World!\")";
+            var code = @"(catch (bar) (print error))";
             var functionSet = new MISP.FunctionSet();
             MISP.StandardLibrary.MapFunctions(functionSet);
             MISP.StandardLibrary.LambdaFunctions(functionSet);
+            MISP.StandardLibrary.LetFunction(functionSet);
+            MISP.StandardLibrary.ExceptionFunctions(functionSet);
 
             var compiled = MISP.Compiler.Compile(MISP.Parser.ParseRoot(code, ""), functionSet);
             var stream = new System.IO.StreamWriter("test.txt");

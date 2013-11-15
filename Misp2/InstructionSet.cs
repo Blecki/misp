@@ -19,22 +19,22 @@ namespace MISP
     {
         YIELD = 0,      //Yield execution back to the system
 
-        MOVE,
-        LOOKUP,
-        MEMBER_LOOKUP,
+        MOVE,           // SOURCE       DESTINATION     UNUSED
+        LOOKUP,         // NAME         DESTINATION     UNUSED
+        MEMBER_LOOKUP,  // NAME         OBJECT          DESTINATION
 
-        LAMBDA_PREAMBLE,
-        BEGIN_LOOP,
-        BREAK,
-        BRANCH,
-        CONTINUE,
-        CLEANUP,
+        BEGIN_LOOP,     // DESTINATION  UNUSED          UNUSED      --Places the current execution point in DESTINATION.
+        BREAK,          // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, skipping 1 instruction.
+        BRANCH,         // CODE         DESTINATION     UNUSED      --BEGIN_LOOP; then move execution into embedded code CODE.
+        CONTINUE,       // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, without advancement.
+        CLEANUP,        // SOURCE       UNUSED          UNUSED      --Remove SOURCE items from top of stack.
+        SWAP_TOP,       // UNUSED       UNUSED          UNUSED      --Swap the two top object on stack.
         
-        EMPTY_LIST,
-        APPEND_RANGE,
-        APPEND,
-        LENGTH,
-        INDEX,
+        EMPTY_LIST,     // DESTINATION  UNUSED          UNUSED      --Create an empty list and store in DESTINATION.
+        APPEND_RANGE,   // LIST-A       LIST-B          DESTINATION --Append A to B, store in DESTINATION.
+        APPEND,         // VALUE        LIST            DESTINATION --Append VALUE to LIST, store in DESTINATION.
+        LENGTH,         // LIST         DESTINATION     UNUSED      --Place the length of LIST in DESTINATION.
+        INDEX,          // INDEX        LIST            DESTINATION --Place LIST[INDEX] in DESTINATION.
         PREPEND,
         PREPEND_RANGE,
 
@@ -52,14 +52,8 @@ namespace MISP
         LESS,
         IF_TRUE,
 
-    }
 
-    public class InstructionHelper
-    {
-        public static UInt16 MakeInstruction(InstructionSet Instruction, Operand Operand)
-        {
-            return (UInt16)((((int)Instruction) << 8) + ((int)Operand));
-        }
+        THROW,
+        CATCH,
     }
-    
 }

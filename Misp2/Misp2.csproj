@@ -40,7 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CompiledFunction.cs" />
+    <Compile Include="LambdaFunction.cs" />
     <Compile Include="Compiler.cs" />
     <Compile Include="Context.cs" />
     <Compile Include="BuiltInFunction.cs" />
@@ -48,9 +48,9 @@
     <Compile Include="InstructionList.cs" />
     <Compile Include="FunctionSet.cs" />
     <Compile Include="Instruction.cs" />
+    <Compile Include="StandardLibrary\Lambda.cs" />
     <Compile Include="StandardLibrary\Map.cs" />
     <Compile Include="SystemFunction.cs" />
-    <Compile Include="LambdaFunction.cs" />
     <Compile Include="InstructionSet.cs" />
     <Compile Include="ParseNode.cs" />
     <Compile Include="Parser.cs" />

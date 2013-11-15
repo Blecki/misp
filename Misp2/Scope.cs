@@ -46,5 +46,13 @@ namespace MISP
             list.RemoveAt(list.Count - 1);
             list.Add(newValue);
         }
+
+        public Scope Capture()
+        {
+            var r = new Scope();
+            foreach (var variable in variables)
+                r.PushVariable(variable.Key, variable.Value.Last());
+            return r;
+        }
     }
 }

@@ -39,6 +39,10 @@ namespace MISP
         PREPEND_RANGE,
 
         INVOKE,
+        LAMBDA,
+        PUSH_SCOPE,
+        POP_SCOPE,
+        PEEK_SCOPE,
 
         PUSH_VARIABLE,
         SET_VARIABLE,

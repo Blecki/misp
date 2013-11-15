@@ -46,15 +46,7 @@ namespace MISP
 #endregion
 
 #region Flow Control
-                case InstructionSet.LAMBDA_PREAMBLE:
-                    {
-                        var arguments = GetOperand(ins.FirstOperand, context) as List<Object>;
-                        var argument_names = GetOperand(ins.SecondOperand, context) as List<String>;
-                        if (arguments == null || argument_names == null) throw new InvalidOperationException("Improper lambda call");
-                        for (var i = 0; i < argument_names.Count; ++i)
-                            context.Scope.PushVariable(argument_names[i], arguments[i + 1]);
-                    }
-                    break;
+                
                 case InstructionSet.BEGIN_LOOP:
                     {
                         var storedContext = context.CodeContext;
@@ -87,6 +79,10 @@ namespace MISP
                         }
                     }
                     break;
+
+                #endregion
+
+                #region Lambdas
                 case InstructionSet.INVOKE:
                     {
                         var arguments = GetOperand(ins.FirstOperand, context) as List<Object>;
@@ -97,6 +93,34 @@ namespace MISP
                             throw new InvalidOperationException("Can't invoke what isn't invokeable.");
                     }
                     break;
+                case InstructionSet.LAMBDA:
+                    {
+                        var arguments = GetOperand(ins.FirstOperand, context) as List<String>;
+                        var code = GetOperand(ins.SecondOperand, context) as InstructionList;
+                        var lambda = LambdaFunction.CreateLambda(context.Scope.Capture(), arguments, code);
+                        SetOperand(ins.ThirdOperand, lambda, context);
+                    }
+                    break;
+                case InstructionSet.PUSH_SCOPE:
+                    {
+                        var scope = GetOperand(ins.FirstOperand, context) as Scope;
+                        context.PushScope(scope);
+                    }
+                    break;
+                case InstructionSet.POP_SCOPE:
+                    {
+                        var scope = context.Scope;
+                        context.PopScope();
+                        SetOperand(ins.FirstOperand, scope, context);
+                    }
+                    break;
+                case InstructionSet.PEEK_SCOPE:
+                    {
+                        var scope = context.Scope;
+                        SetOperand(ins.FirstOperand, scope, context);
+                    }
+                    break;
+                    
 #endregion
 
 #region Lists

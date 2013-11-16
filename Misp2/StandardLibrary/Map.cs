@@ -7,9 +7,15 @@ namespace MISP
 {
     public partial class StandardLibrary
     {
-        public static void MapFunctions(FunctionSet set)
+        public static void MapFunctions(Environment environment)
         {
-            set.AddBuiltin("map", (node, functions) =>
+            environment.AddCoreFunction(
+                "map",
+                "Transform one list into another by invoking code for each element.",
+                Arguments("variable-name", "The name of the variable that will hold the item in the interior code.",
+                        "list", "A list of items to be transformed.",
+                        "code", "The code to transform a single item."),
+                (node, functions) =>
                 {
                     return new InstructionList(
                         new InPlace(Compiler.Compile(node.Children[2], functions)),

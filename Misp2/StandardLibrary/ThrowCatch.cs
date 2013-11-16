@@ -7,9 +7,14 @@ namespace MISP
 {
     public partial class StandardLibrary
     {
-        public static void ExceptionFunctions(FunctionSet set)
+        public static void ExceptionFunctions(Environment environment)
         {
-            set.AddBuiltin("catch", (node, functions) =>
+            environment.AddCoreFunction(
+                "catch",
+                @"Catch an error. The first argument is executed. If an error occurs, the second argument is executed.",
+                Arguments("code", "The code to catch errors from.",
+                          "handler", "The code to run when an error occurs."),
+                (node, functions) =>
                 {
                     return new InstructionList(
                         "CATCH NEXT NEXT",
@@ -27,7 +32,11 @@ namespace MISP
                        
                 });
 
-            set.AddBuiltin("throw", (node, functions) =>
+            environment.AddCoreFunction(
+                "throw", 
+                "Throw an error that can be caught by a catch higher in the call stack.",
+                Arguments("object", "The error object to throw."),
+                (node, functions) =>
                 {
                     return new InstructionList(
                         new InPlace(Compiler.Compile(node.Children[1], functions)),

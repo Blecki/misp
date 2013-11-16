@@ -7,18 +7,6 @@ namespace MISP
 {
     public class Compiler
     {
-        public static InstructionList CompileFunction(ParseNode node, FunctionSet builtIns)
-        {
-            var arguments = new List<String>();
-            foreach (var argument in node.Children[1].Children)
-                arguments.Add(argument.Token);
-
-            return new InstructionList(
-                "LAMBDA_PREAMBLE POP NEXT", arguments,
-                new InPlace(Compile(node.Children[2], builtIns)),
-                "BREAK POP");
-        }
-
         public static InstructionList Compile(ParseNode node, FunctionSet builtIns)
         {
             var r = new InstructionList();
@@ -111,31 +99,6 @@ namespace MISP
                 }
                 else
                     return Int32.Parse(str);
-            }
-        }
-
-        public static void DumpOpcode(List<Object> opcode, System.IO.StreamWriter to, int indent = 0)
-        {
-            foreach (var item in opcode)
-            {
-                to.Write(new String(' ', indent * 4));
-                if (item == null) to.Write("NULL\n");
-                else if (item is List<String>)
-                {
-                    to.Write("[ ");
-                    foreach (var entry in item as List<String>) to.Write(entry + " ");
-                    to.Write("]\n");
-                }
-                else if (item is List<Object>)
-                {
-                    to.Write("--- Embedded instruction stream\n");
-                    DumpOpcode(item as List<Object>, to, indent + 1);
-                    to.Write(new String(' ', indent * 4));
-                    to.Write("--- End embedded stream\n");
-                }
-                else if (item is String)
-                    to.Write("\"" + item.ToString() + "\"\n");
-                else to.Write(item.ToString() + "\n");
             }
         }
     }

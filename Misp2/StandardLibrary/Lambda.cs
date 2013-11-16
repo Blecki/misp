@@ -7,9 +7,14 @@ namespace MISP
 {
     public partial class StandardLibrary
     {
-        public static void LambdaFunctions(FunctionSet set)
+        public static void LambdaFunctions(Environment environment)
         {
-            set.AddBuiltin("lambda", (node, functions) =>
+            environment.AddCoreFunction(
+                "lambda",
+                "Create a lambda function object that can be invoked.",
+                Arguments("arguments", "A list of arguments that can be passed to the lambda.",
+                        "code", "The body of the lambda."),
+                (node, functions) =>
                 {
                     var argumentList = new List<String>();
                     foreach (var item in node.Children[1].Children)

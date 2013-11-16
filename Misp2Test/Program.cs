@@ -10,15 +10,13 @@ namespace Misp2Test
         static void Main(string[] args)
         {
             var code = @"(catch (bar) (print error))";
-            var functionSet = new MISP.FunctionSet();
-            MISP.StandardLibrary.MapFunctions(functionSet);
-            MISP.StandardLibrary.LambdaFunctions(functionSet);
-            MISP.StandardLibrary.LetFunction(functionSet);
-            MISP.StandardLibrary.ExceptionFunctions(functionSet);
 
-            var compiled = MISP.Compiler.Compile(MISP.Parser.ParseRoot(code, ""), functionSet);
+            var Environment = new MISP.Environment();
+            Environment.SetupStandardEnvironment();
+
+            var context = Environment.CompileScript(code);
             var stream = new System.IO.StreamWriter("test.txt");
-            MISP.Compiler.DumpOpcode(compiled, stream);
+            MISP.Debug.DumpCompiledCode(context, stream);
 
             stream.WriteLine("****OUTPUT****");
 
@@ -29,7 +27,6 @@ namespace Misp2Test
                         return null;
                     });
 
-            var context = new MISP.Context(new MISP.CodeContext(compiled, 0));
             context.Scope.PushVariable("print", systemFunction);
 
             try

@@ -40,15 +40,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ArgumentDescriptor.cs" />
+    <Compile Include="Debug.cs" />
+    <Compile Include="Environment.cs" />
     <Compile Include="ErrorHandler.cs" />
     <Compile Include="LambdaFunction.cs" />
     <Compile Include="Compiler.cs" />
     <Compile Include="Context.cs" />
-    <Compile Include="BuiltInFunction.cs" />
+    <Compile Include="CoreFunction.cs" />
     <Compile Include="InvokableFunction.cs" />
     <Compile Include="InstructionList.cs" />
     <Compile Include="FunctionSet.cs" />
     <Compile Include="Instruction.cs" />
+    <Compile Include="StandardLibrary\DeclarationHelper.cs" />
     <Compile Include="StandardLibrary\ThrowCatch.cs" />
     <Compile Include="StandardLibrary\Let.cs" />
     <Compile Include="StandardLibrary\Lambda.cs" />

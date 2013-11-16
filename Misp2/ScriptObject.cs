@@ -49,5 +49,10 @@ namespace MISP
         {
             properties.Clear();
         }
+
+        public bool HasProperty(String name)
+        {
+            return properties.ContainsKey(name);
+        }
     }
 }

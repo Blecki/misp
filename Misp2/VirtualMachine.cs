@@ -13,8 +13,13 @@ namespace MISP
             //      an exception is thrown in C#. 
             //When an error represents faulty input code, an exception is thrown in MISP.
 
+            if (context.ExecutionState != ExecutionState.Running) return;
+
             if (context.CodeContext.InstructionPointer >= context.CodeContext.Code.Count)
-                throw new InvalidOperationException("End of code reached.");
+            {
+                context.ExecutionState = ExecutionState.Finished;
+                return;
+            }
 
             var nextInstruction = context.CodeContext.Code[context.CodeContext.InstructionPointer] as Instruction?;
             context.CodeContext.InstructionPointer += 1;
@@ -39,20 +44,57 @@ namespace MISP
                 case InstructionSet.LOOKUP:
                     {
                         var name = GetOperand(ins.FirstOperand, context).ToString();
-                        if (!context.Scope.HasVariable(name))
+                        Object value = null;
+                        if (context.Scope.HasVariable(name))
+                            value = context.Scope.GetVariable(name);
+                        else if (context.Environment.NativeFunctions.ContainsKey(name))
+                            value = context.Environment.NativeFunctions[name];
+                        else
                         {
                             Throw(new InvalidOperationException("Could not resolve name '" + name + "'."), context);
                             break;
                         }
-                        SetOperand(ins.SecondOperand, context.Scope.GetVariable(name), context);
+                        SetOperand(ins.SecondOperand, value, context);
                     }
                     break;
                 case InstructionSet.MEMBER_LOOKUP:
                     {
-                        var member_name = GetOperand(ins.FirstOperand, context).ToString();
+                        var memberName = GetOperand(ins.FirstOperand, context).ToString();
                         var obj = GetOperand(ins.SecondOperand, context);
-                        //TODO: Use reflection to find the member.
-                        SetOperand(ins.ThirdOperand, null, context);
+                        Object value = null;
+
+                        if (obj == null)
+                        {
+                            Throw(new InvalidOperationException("Could not inspect members of NULL."), context);
+                            break;
+                        }
+
+                        if (obj is ScriptObject) //Special handling of script objects.
+                        {
+                            var scriptObject = obj as ScriptObject;
+                            if (scriptObject.HasProperty(memberName))
+                                value = scriptObject.GetProperty(memberName);
+                            else
+                            {
+                                Throw(new InvalidOperationException("Could not find member " + memberName + " on generic object."),
+                                    context);
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            var lookupResult = LookupMemberWithReflection(obj, memberName);
+                            if (lookupResult.FoundMember == false)
+                            {
+                                Throw(new InvalidOperationException("Could not find member " + memberName + " on type " +
+                                    obj.GetType().Name + "."), context);
+                                break;
+                            }
+                            else
+                                value = lookupResult.Member;
+                        }
+
+                        SetOperand(ins.ThirdOperand, value, context);
                     }
                     break;
 #endregion
@@ -111,7 +153,14 @@ namespace MISP
                         var arguments = GetOperand(ins.FirstOperand, context) as List<Object>;
                         var function = arguments[0];
                         if (function is InvokeableFunction)
-                            (function as InvokeableFunction).Invoke(context, arguments);
+                        {
+                            var InvokationResult = (function as InvokeableFunction).Invoke(context, arguments);
+                            if (InvokationResult.InvokationSucceeded == false)
+                            {
+                                Throw(new InvalidOperationException(InvokationResult.ErrorMessage), context);
+                                break;
+                            }
+                        }
                         else
                             Throw(new InvalidOperationException("Can't invoke what isn't invokeable."), context);
                     }
@@ -325,6 +374,40 @@ namespace MISP
             if (ins.FirstOperand == Operand.NEXT) context.CodeContext.InstructionPointer += 1;
             if (ins.SecondOperand == Operand.NEXT) context.CodeContext.InstructionPointer += 1;
             if (ins.ThirdOperand == Operand.NEXT) context.CodeContext.InstructionPointer += 1;
+        }
+
+        public struct MemberLookupResult
+        {
+            public bool FoundMember;
+            public Object Member;
+
+            public static MemberLookupResult Success(Object Member) { return new MemberLookupResult { Member = Member, FoundMember = true }; }
+            public static MemberLookupResult Failure { get { return new MemberLookupResult { FoundMember = false }; }}
+        }
+
+        public static MemberLookupResult LookupMemberWithReflection(Object obj, String memberName)
+        {
+            System.Diagnostics.Debug.Assert(obj != null);
+
+            var type = obj.GetType();
+
+            var field = type.GetField(memberName);
+            if (field != null)
+                return MemberLookupResult.Success(field.GetValue(obj));
+
+            var property = type.GetProperty(memberName);
+            if (property != null)
+                return MemberLookupResult.Success(property.GetValue(obj, null));
+
+            var methods = type.FindMembers(
+                System.Reflection.MemberTypes.Method,
+                System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance,
+                new System.Reflection.MemberFilter((minfo, _obj) => { return minfo.Name == memberName; }),
+                memberName);
+            if (methods.Length != 0)
+                return MemberLookupResult.Success(new OverloadedReflectionFunction(obj, memberName));
+
+            return MemberLookupResult.Failure;
         }
     }
 }

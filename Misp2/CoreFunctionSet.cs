@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MISP
 {
-    public class FunctionSet : Dictionary<String, CoreFunction>
+    public class CoreFunctionSet : Dictionary<String, CoreFunction>
     {
         
     }

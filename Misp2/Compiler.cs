@@ -7,7 +7,7 @@ namespace MISP
 {
     public class Compiler
     {
-        public static InstructionList Compile(ParseNode node, FunctionSet builtIns)
+        public static InstructionList Compile(ParseNode node, CoreFunctionSet coreFunctions)
         {
             var r = new InstructionList();
 
@@ -26,8 +26,8 @@ namespace MISP
                     r.AddInstruction("LOOKUP NEXT PUSH", node.Token);
                     break;
                 case NodeTypes.MemberAccess:
-                    r.AddRange(Compile(node.Children[0], builtIns));
-                    r.AddRange(Compile(node.Children[1], builtIns));
+                    r.AddRange(Compile(node.Children[0], coreFunctions));
+                    r.AddRange(Compile(node.Children[1], coreFunctions));
                     r.AddInstruction("MEMBER_LOOKUP POP POP PUSH");
                     //TODO: And evaluate
                     break;
@@ -37,7 +37,7 @@ namespace MISP
                         r.AddInstruction("EMPTY_LIST PUSH");
                         foreach (var child in node.Children)
                         {
-                            r.AddRange(Compile(child, builtIns));
+                            r.AddRange(Compile(child, coreFunctions));
                             if (child.Prefix == Prefixes.ExpandInPlace)
                                 r.AddInstruction("APPEND_RANGE POP PEEK");
                             else
@@ -50,16 +50,16 @@ namespace MISP
                         if (node.Children.Count == 0) break;
                         if (node.Children[0].Type == NodeTypes.Token)
                         {
-                            if (builtIns.ContainsKey(node.Children[0].Token))
+                            if (coreFunctions.ContainsKey(node.Children[0].Token))
                             {
-                                r.AddRange(builtIns[node.Children[0].Token].EmitOpcode(node, builtIns));
+                                r.AddRange(coreFunctions[node.Children[0].Token].EmitOpcode(node, coreFunctions));
                                 break;
                             }
                         }
                         r.AddInstruction("EMPTY_LIST PUSH");
                         foreach (var child in node.Children)
                         {
-                            r.AddRange(Compile(child, builtIns));
+                            r.AddRange(Compile(child, coreFunctions));
                             if (child.Prefix == Prefixes.ExpandInPlace)
                                 r.AddInstruction("APPEND_RANGE POP PEEK");
                             else

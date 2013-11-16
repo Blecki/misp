@@ -17,12 +17,21 @@ namespace MISP
         }
     }
 
+    public enum ExecutionState
+    {
+        Running,
+        Finished,
+        Blocked
+    }
+
     public class Context
     {
         private List<Scope> scopeStack = new List<Scope>();
         internal Stack<Object> Stack = new Stack<Object>();
         internal CodeContext CodeContext;
         internal CodeContext OriginalCodeContext;
+        internal Environment Environment;
+        public ExecutionState ExecutionState { get; internal set; }
 
         public void Reset()
         {
@@ -30,11 +39,13 @@ namespace MISP
             Stack.Clear();
             PushScope(new Scope());
             CodeContext = OriginalCodeContext;
+            ExecutionState = MISP.ExecutionState.Running;
         }
 
-        public Context(CodeContext start)
+        internal Context(CodeContext start, Environment Environment)
         {
             this.OriginalCodeContext = start;
+            this.Environment = Environment;
             Reset();
         }
 

@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArgumentDescriptor.cs" />
+    <Compile Include="OverloadedReflectionFunction.cs" />
+    <Compile Include="NativeFunctionSet.cs" />
     <Compile Include="Debug.cs" />
     <Compile Include="Environment.cs" />
     <Compile Include="ErrorHandler.cs" />
@@ -50,14 +52,14 @@
     <Compile Include="CoreFunction.cs" />
     <Compile Include="InvokableFunction.cs" />
     <Compile Include="InstructionList.cs" />
-    <Compile Include="FunctionSet.cs" />
+    <Compile Include="CoreFunctionSet.cs" />
     <Compile Include="Instruction.cs" />
     <Compile Include="StandardLibrary\DeclarationHelper.cs" />
     <Compile Include="StandardLibrary\ThrowCatch.cs" />
     <Compile Include="StandardLibrary\Let.cs" />
     <Compile Include="StandardLibrary\Lambda.cs" />
     <Compile Include="StandardLibrary\Map.cs" />
-    <Compile Include="SystemFunction.cs" />
+    <Compile Include="NativeFunction.cs" />
     <Compile Include="InstructionSet.cs" />
     <Compile Include="ParseNode.cs" />
     <Compile Include="Parser.cs" />

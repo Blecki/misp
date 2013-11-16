@@ -11,7 +11,7 @@ namespace MISP
         public List<String> ArgumentNames = null;
         public Scope CapturedScope = null;
 
-        public override void Invoke(Context context, List<object> arguments)
+        public override InvokationResult Invoke(Context context, List<object> arguments)
         {
             context.Stack.Push(context.CodeContext);
             context.CodeContext = new CodeContext(Opcode, 0);
@@ -19,6 +19,8 @@ namespace MISP
             context.PushScope(CapturedScope.Capture());
             for (int i = 0; i < ArgumentNames.Count; ++i)
                 context.Scope.PushVariable(ArgumentNames[i], arguments[i + 1]);
+
+            return InvokationResult.Success;
         }
 
         public static LambdaFunction CreateLambda(Scope CapturedScope, List<String> ArgumentNames, InstructionList Code)

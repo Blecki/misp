@@ -18,14 +18,14 @@ namespace MISP
                 (node, functions) =>
                 {
                     var variables = node.Children[1].Children;
-                    var bodyCode = Compiler.Compile(node.Children[2], environment.BuiltInFunctions);
+                    var bodyCode = Compiler.Compile(node.Children[2], environment.CoreFunctions);
 
                     var r = new InstructionList();
                     
                     foreach (var v in variables)
                     {
                         r.AddInstruction(
-                            new InPlace(Compiler.Compile(v.Children[1], environment.BuiltInFunctions)),
+                            new InPlace(Compiler.Compile(v.Children[1], environment.CoreFunctions)),
                             "PUSH_VARIABLE POP NEXT", v.Children[0].Token);
                     }
                     

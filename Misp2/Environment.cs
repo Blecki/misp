@@ -7,15 +7,25 @@ namespace MISP
 {
     public class Environment
     {
-        internal FunctionSet BuiltInFunctions = new FunctionSet();
+        //TODO: Round robin threaded execution of scripts.
+
+        internal CoreFunctionSet CoreFunctions = new CoreFunctionSet();
+        internal NativeFunctionSet NativeFunctions = new NativeFunctionSet();
 
         public void AddCoreFunction(
             String Name, 
             String HelpText,
             List<ArgumentDescriptor> Arguments, 
-            Func<ParseNode, FunctionSet, InstructionList> Emit)
+            Func<ParseNode, CoreFunctionSet, InstructionList> Emit)
         {
-            BuiltInFunctions.Upsert(Name, new CoreFunction(Name, HelpText, Arguments, Emit));
+            CoreFunctions.Upsert(Name, new CoreFunction(Name, HelpText, Arguments, Emit));
+        }
+
+        public void QuickBind(
+            String Name,
+            Func<Context, List<Object>, Object> Implementation)
+        {
+            NativeFunctions.Upsert(Name, new NativeFunction(Implementation));
         }
 
         public void SetupStandardEnvironment()
@@ -29,8 +39,8 @@ namespace MISP
         public Context CompileScript(String Script)
         {
             var parsedScript = Parser.ParseRoot(Script, "");
-            var compiledScript = Compiler.Compile(parsedScript, BuiltInFunctions);
-            return new Context(new CodeContext(compiledScript, 0));
+            var compiledScript = Compiler.Compile(parsedScript, CoreFunctions);
+            return new Context(new CodeContext(compiledScript, 0), this);
         }
 
 

@@ -13,6 +13,7 @@ namespace Misp2Test
 
             var Environment = new MISP.Environment();
             Environment.SetupStandardEnvironment();
+            
 
             var context = Environment.CompileScript(code);
             var stream = new System.IO.StreamWriter("test.txt");
@@ -20,18 +21,16 @@ namespace Misp2Test
 
             stream.WriteLine("****OUTPUT****");
 
-            var systemFunction = new MISP.SystemFunction((_context, arguments) =>
-                    {
-                        foreach (var item in arguments)
-                            stream.WriteLine(item.ToString());
-                        return null;
-                    });
-
-            context.Scope.PushVariable("print", systemFunction);
+            Environment.QuickBind("print", (_context, arguments) =>
+            {
+                foreach (var item in arguments)
+                    stream.WriteLine(item.ToString());
+                return null;
+            });
 
             try
             {
-                while (true) MISP.VirtualMachine.Execute(context);
+                while (context.ExecutionState == MISP.ExecutionState.Running) MISP.VirtualMachine.Execute(context);
             }
             catch (Exception e)
             {

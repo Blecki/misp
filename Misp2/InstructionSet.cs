@@ -25,9 +25,9 @@ namespace MISP
         SET_MEMBER,     // VALUE        NAME            OBJECT
         RECORD,         // DESTINATION  UNUSED          UNUSED      --Create an empty record and store in DESTINATION.
 
-        BEGIN_LOOP,     // DESTINATION  UNUSED          UNUSED      --Places the current execution point in DESTINATION.
+        MARK,           // DESTINATION  UNUSED          UNUSED      --Places the current execution point in DESTINATION.
         BREAK,          // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, skipping 1 instruction.
-        BRANCH,         // CODE         DESTINATION     UNUSED      --BEGIN_LOOP; then move execution into embedded code CODE.
+        BRANCH,         // CODE         DESTINATION     UNUSED      --MARK; then move execution into embedded code CODE.
         CONTINUE,       // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, without advancement.
         CLEANUP,        // SOURCE       UNUSED          UNUSED      --Remove SOURCE items from top of stack.
         SWAP_TOP,       // UNUSED       UNUSED          UNUSED      --Swap the two top object on stack.
@@ -53,6 +53,9 @@ namespace MISP
         DECREMENT,
         LESS,
         IF_TRUE,
+        IF_FALSE,
+        SKIP,
+        EQUAL,
 
 
         THROW,

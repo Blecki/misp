@@ -25,6 +25,25 @@ namespace MISP
 
                     return r;
                 });
+
+            environment.AddCoreFunction(
+                "return-first",
+                "Result is the first of it's arguments.",
+                Arguments("nodes", "1 or more sub expressions."),
+                (node, functions) =>
+                {
+                    var r = new InstructionList();
+
+                    r.AddRange(Compiler.Compile(node.Children[1], functions));
+
+                    for (int i = 1; i < node.Children.Count - 1; ++i)
+                    {
+                        r.AddRange(Compiler.Compile(node.Children[i + 1], functions));
+                        r.AddInstruction("MOVE POP NONE");
+                    }
+
+                    return r;
+                });
         }
     }
 }

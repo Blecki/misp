@@ -23,7 +23,10 @@ namespace MISP
                     r.AddInstruction("MOVE NEXT PUSH", node.Token[0]);
                     break;
                 case NodeTypes.Token:
-                    r.AddInstruction("LOOKUP NEXT PUSH", node.Token);
+                    if (coreFunctions.CompileTimeConstants.ContainsKey(node.Token))
+                        r.AddInstruction("MOVE NEXT PUSH", coreFunctions.CompileTimeConstants[node.Token].Value);
+                    else
+                        r.AddInstruction("LOOKUP NEXT PUSH", node.Token);
                     break;
                 case NodeTypes.MemberAccess:
                     r.AddRange(Compile(node.Children[0], coreFunctions));
@@ -53,9 +56,9 @@ namespace MISP
                         if (node.Children.Count == 0) break;
                         if (node.Children[0].Type == NodeTypes.Token)
                         {
-                            if (coreFunctions.ContainsKey(node.Children[0].Token))
+                            if (coreFunctions.CoreFunctions.ContainsKey(node.Children[0].Token))
                             {
-                                r.AddRange(coreFunctions[node.Children[0].Token].EmitOpcode(node, coreFunctions));
+                                r.AddRange(coreFunctions.CoreFunctions[node.Children[0].Token].EmitOpcode(node, coreFunctions));
                                 break;
                             }
                         }

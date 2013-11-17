@@ -18,7 +18,12 @@ namespace MISP
             List<ArgumentDescriptor> Arguments, 
             Func<ParseNode, CoreFunctionSet, InstructionList> Emit)
         {
-            CoreFunctions.Upsert(Name, new CoreFunction(Name, HelpText, Arguments, Emit));
+            CoreFunctions.CoreFunctions.Upsert(Name, new CoreFunction(Name, HelpText, Arguments, Emit));
+        }
+
+        public void AddCompileTimeConstant(String Name, Object Value)
+        {
+            CoreFunctions.CompileTimeConstants.Upsert(Name, new CompileTimeConstant(Name, Value));
         }
 
         public void QuickBind(
@@ -38,6 +43,7 @@ namespace MISP
             MISP.StandardLibrary.RecordFunction(this);
             MISP.StandardLibrary.ImperativeFunctions(this);
             MISP.StandardLibrary.MathFunctions(this);
+            MISP.StandardLibrary.BooleanBranching(this);
         }
        
         public Context CompileScript(String Script)

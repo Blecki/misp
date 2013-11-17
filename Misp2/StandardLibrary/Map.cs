@@ -24,7 +24,7 @@ namespace MISP
                         "PUSH_VARIABLE POP NEXT", "__counter",
                         "EMPTY_LIST PUSH",
                         "PUSH_VARIABLE POP NEXT", "__result",
-                        "BEGIN_LOOP PUSH",
+                        "MARK PUSH",
                             "LOOKUP NEXT PUSH", "__counter",
                             "DECREMENT POP PUSH",
                             "SET_VARIABLE PEEK NEXT", "__counter",

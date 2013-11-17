@@ -41,6 +41,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ArgumentDescriptor.cs" />
+    <Compile Include="CompileTimeConstant.cs" />
     <Compile Include="OverloadedReflectionFunction.cs" />
     <Compile Include="NativeFunctionSet.cs" />
     <Compile Include="Debug.cs" />
@@ -54,6 +55,7 @@
     <Compile Include="InstructionList.cs" />
     <Compile Include="CoreFunctionSet.cs" />
     <Compile Include="Instruction.cs" />
+    <Compile Include="StandardLibrary\BooleanBranching.cs" />
     <Compile Include="StandardLibrary\Math.cs" />
     <Compile Include="StandardLibrary\Imperative.cs" />
     <Compile Include="StandardLibrary\Record.cs" />

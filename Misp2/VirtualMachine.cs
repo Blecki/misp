@@ -136,7 +136,7 @@ namespace MISP
 
 #region Flow Control
                 
-                case InstructionSet.BEGIN_LOOP:
+                case InstructionSet.MARK:
                     {
                         var storedContext = context.CodeContext;
                         storedContext.InstructionPointer -= 1; //Rewind to the start of this instruction
@@ -327,6 +327,27 @@ namespace MISP
                     {
                         var b = GetOperand(ins.FirstOperand, context) as bool?;
                         if (!b.HasValue || !b.Value) Skip(context);
+                    }
+                    break;
+                case InstructionSet.IF_FALSE:
+                    {
+                        var b = GetOperand(ins.FirstOperand, context) as bool?;
+                        if (b.HasValue && b.Value) Skip(context);
+                    }
+                    break;
+                case InstructionSet.SKIP:
+                    {
+                        var distance = (GetOperand(ins.FirstOperand, context) as int?).Value;
+                        while (distance > 0) { Skip(context); --distance; }
+                    }
+                    break;
+
+                case InstructionSet.EQUAL:
+                    {
+                        dynamic a = GetOperand(ins.FirstOperand, context);
+                        dynamic b = GetOperand(ins.SecondOperand, context);
+                        var result = (a == b);
+                        SetOperand(ins.ThirdOperand, result, context);
                     }
                     break;
 

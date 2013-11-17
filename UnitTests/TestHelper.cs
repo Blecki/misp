@@ -25,10 +25,14 @@ namespace MISP
             Assert.AreEqual(ExecutionState.Finished, context.ExecutionState);
         }
 
-        public static Object ReturnValue(Context context)
+        public static void RunSimpleTest(String script, Object expectedResult)
         {
-            Assert.DoesNotThrow(() => { var x = context.Peek; });
-            return context.Peek;
+            Console.WriteLine("Test script: " + script);
+            var Environment = TestHelper.CreateEnvironment();
+            var context = Environment.CompileScript(script);
+            TestHelper.RunUntilFinished(context);
+            Console.WriteLine("");
+            Assert.AreEqual(expectedResult, context.Peek);
         }
     }
 }

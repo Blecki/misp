@@ -9,14 +9,14 @@ namespace MISP
     {
         //TODO: Round robin threaded execution of scripts.
 
-        internal CoreFunctionSet CoreFunctions = new CoreFunctionSet();
+        internal CompileContext CoreFunctions = new CompileContext();
         internal NativeFunctionSet NativeFunctions = new NativeFunctionSet();
 
         public void AddCoreFunction(
             String Name, 
             String HelpText,
             List<ArgumentDescriptor> Arguments, 
-            Func<ParseNode, CoreFunctionSet, InstructionList> Emit)
+            Func<ParseNode, CompileContext, InstructionList> Emit)
         {
             CoreFunctions.CoreFunctions.Upsert(Name, new CoreFunction(Name, HelpText, Arguments, Emit));
         }
@@ -28,7 +28,7 @@ namespace MISP
 
         public void QuickBind(
             String Name,
-            Func<Context, List<Object>, Object> Implementation)
+            Func<ExecutionContext, List<Object>, Object> Implementation)
         {
             NativeFunctions.Upsert(Name, new NativeFunction(Implementation));
         }
@@ -46,11 +46,11 @@ namespace MISP
             MISP.StandardLibrary.BooleanBranching(this);
         }
        
-        public Context CompileScript(String Script)
+        public ExecutionContext CompileScript(String Script)
         {
             var parsedScript = Parser.ParseRoot(Script, "");
             var compiledScript = Compiler.Compile(parsedScript, CoreFunctions);
-            return new Context(new CodeContext(compiledScript, 0), this);
+            return new ExecutionContext(new CodeContext(compiledScript, 0), this);
         }
 
         public Object RunScript(String Script)

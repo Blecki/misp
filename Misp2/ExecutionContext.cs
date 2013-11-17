@@ -25,7 +25,7 @@ namespace MISP
         Error
     }
 
-    public class Context
+    public class ExecutionContext
     {
         private List<Scope> scopeStack = new List<Scope>();
         internal Stack<Object> Stack = new Stack<Object>();
@@ -46,7 +46,7 @@ namespace MISP
             ExecutionState = MISP.ExecutionState.Running;
         }
 
-        internal Context(CodeContext start, Environment Environment)
+        internal ExecutionContext(CodeContext start, Environment Environment)
         {
             this.OriginalCodeContext = start;
             this.Environment = Environment;

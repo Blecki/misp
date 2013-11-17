@@ -16,7 +16,7 @@ namespace MISP
             this.MethodName = MethodName;
         }
 
-         public override InvokationResult Invoke(Context context, List<Object> arguments)
+         public override InvokationResult Invoke(ExecutionContext context, List<Object> arguments)
         {
             var trimmedArguments = arguments.GetRange(1, arguments.Count - 1);
              var argumentTypes = trimmedArguments.Select((obj) => obj.GetType()).ToArray();

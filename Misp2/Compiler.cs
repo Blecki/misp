@@ -7,7 +7,7 @@ namespace MISP
 {
     public class Compiler
     {
-        public static InstructionList Compile(ParseNode node, CoreFunctionSet coreFunctions)
+        public static InstructionList Compile(ParseNode node, CompileContext coreFunctions)
         {
             var r = new InstructionList();
 

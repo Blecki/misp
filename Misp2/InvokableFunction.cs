@@ -22,6 +22,6 @@ namespace MISP
 
     public class InvokeableFunction
     {
-        public virtual InvokationResult Invoke(Context context, List<Object> arguments) { throw new NotImplementedException(); }
+        public virtual InvokationResult Invoke(ExecutionContext context, List<Object> arguments) { throw new NotImplementedException(); }
     }
 }

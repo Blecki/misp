@@ -15,7 +15,7 @@ namespace MISP
             return r;
         }
 
-        public static void RunUntilFinished(Context context)
+        public static void RunUntilFinished(ExecutionContext context)
         {
             Debug.DumpCompiledCode(context, Console.Out);
             while (context.ExecutionState == ExecutionState.Running)

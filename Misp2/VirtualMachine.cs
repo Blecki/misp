@@ -7,7 +7,7 @@ namespace MISP
 {
     public class VirtualMachine
     {
-        public static void Execute(Context context)
+        public static void Execute(ExecutionContext context)
         {
             //When an error represents bad output from the compiler or a built in function,
             //      an exception is thrown in C#. 
@@ -415,7 +415,7 @@ namespace MISP
 
         }
 
-        public static void Throw(Object errorObject, Context context)
+        public static void Throw(Object errorObject, ExecutionContext context)
         {
             while (true)
             {
@@ -438,7 +438,7 @@ namespace MISP
             }
         }
 
-        public static void SetOperand(Operand operand, Object value, Context context)
+        public static void SetOperand(Operand operand, Object value, ExecutionContext context)
         {
             switch (operand)
             {
@@ -450,7 +450,7 @@ namespace MISP
             }
         }
 
-        public static Object GetOperand(Operand operand, Context context)
+        public static Object GetOperand(Operand operand, ExecutionContext context)
         {
             switch (operand)
             {
@@ -463,7 +463,7 @@ namespace MISP
             }
         }
 
-        public static void Skip(Context context)
+        public static void Skip(ExecutionContext context)
         {
             var nextInstruction = context.CodeContext.Code[context.CodeContext.InstructionPointer] as Instruction?;
             context.CodeContext.InstructionPointer += 1;

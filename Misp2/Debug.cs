@@ -7,7 +7,7 @@ namespace MISP
 {
     public class Debug
     {
-        public static void DumpCompiledCode(Context context, System.IO.TextWriter to)
+        public static void DumpCompiledCode(ExecutionContext context, System.IO.TextWriter to)
         {
             DumpOpcode(context.OriginalCodeContext.Code, to, 0);
         }

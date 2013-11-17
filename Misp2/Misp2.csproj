@@ -49,11 +49,11 @@
     <Compile Include="ErrorHandler.cs" />
     <Compile Include="LambdaFunction.cs" />
     <Compile Include="Compiler.cs" />
-    <Compile Include="Context.cs" />
+    <Compile Include="ExecutionContext.cs" />
     <Compile Include="CoreFunction.cs" />
     <Compile Include="InvokableFunction.cs" />
     <Compile Include="InstructionList.cs" />
-    <Compile Include="CoreFunctionSet.cs" />
+    <Compile Include="CompileContext.cs" />
     <Compile Include="Instruction.cs" />
     <Compile Include="StandardLibrary\BooleanBranching.cs" />
     <Compile Include="StandardLibrary\Math.cs" />

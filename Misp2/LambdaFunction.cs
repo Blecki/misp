@@ -11,7 +11,7 @@ namespace MISP
         public List<String> ArgumentNames = null;
         public Scope CapturedScope = null;
 
-        public override InvokationResult Invoke(Context context, List<object> arguments)
+        public override InvokationResult Invoke(ExecutionContext context, List<object> arguments)
         {
             context.Stack.Push(context.CodeContext);
             context.CodeContext = new CodeContext(Opcode, 0);

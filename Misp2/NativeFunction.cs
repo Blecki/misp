@@ -10,13 +10,13 @@ namespace MISP
         public String Name = null;
         public List<ArgumentDescriptor> Arguments = null;
         public String HelpText = null;
-        public Func<Context, List<Object>, Object> NativeImplementation { get; private set; }
+        public Func<ExecutionContext, List<Object>, Object> NativeImplementation { get; private set; }
 
         public NativeFunction(
             String Name,
             String HelpText,
             List<ArgumentDescriptor> Arguments,
-            Func<Context, List<Object>, Object> NativeImplementation)
+            Func<ExecutionContext, List<Object>, Object> NativeImplementation)
         {
             this.Name = Name;
             this.Arguments = Arguments;
@@ -24,12 +24,12 @@ namespace MISP
             this.NativeImplementation = NativeImplementation;
         }
 
-        public NativeFunction(Func<Context, List<Object>, Object> NativeImplementation)
+        public NativeFunction(Func<ExecutionContext, List<Object>, Object> NativeImplementation)
         {
             this.NativeImplementation = NativeImplementation;
         }
 
-        public override InvokationResult Invoke(Context context, List<Object> arguments)
+        public override InvokationResult Invoke(ExecutionContext context, List<Object> arguments)
         {
             try
             {

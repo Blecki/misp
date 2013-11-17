@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MISP
 {
-    public class CoreFunctionSet 
+    public class CompileContext 
     {
         internal Dictionary<String, CoreFunction> CoreFunctions = new Dictionary<string, CoreFunction>();
         internal Dictionary<String, CompileTimeConstant> CompileTimeConstants = new Dictionary<string, CompileTimeConstant>();        

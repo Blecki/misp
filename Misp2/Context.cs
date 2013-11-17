@@ -33,6 +33,8 @@ namespace MISP
         internal Environment Environment;
         public ExecutionState ExecutionState { get; internal set; }
 
+        public Object Peek { get { return Stack.Peek(); } }
+
         public void Reset()
         {
             scopeStack.Clear();

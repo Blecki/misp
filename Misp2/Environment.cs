@@ -34,6 +34,9 @@ namespace MISP
             MISP.StandardLibrary.LambdaFunctions(this);
             MISP.StandardLibrary.LetFunction(this);
             MISP.StandardLibrary.ExceptionFunctions(this);
+            MISP.StandardLibrary.SetFunction(this);
+            MISP.StandardLibrary.RecordFunction(this);
+            MISP.StandardLibrary.ImperativeFunctions(this);
         }
        
         public Context CompileScript(String Script)

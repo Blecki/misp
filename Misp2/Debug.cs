@@ -7,12 +7,12 @@ namespace MISP
 {
     public class Debug
     {
-        public static void DumpCompiledCode(Context context, System.IO.StreamWriter to)
+        public static void DumpCompiledCode(Context context, System.IO.TextWriter to)
         {
             DumpOpcode(context.CodeContext.Code, to, 0);
         }
 
-        private static void DumpOpcode(List<Object> opcode, System.IO.StreamWriter to, int indent)
+        private static void DumpOpcode(List<Object> opcode, System.IO.TextWriter to, int indent)
         {
             foreach (var item in opcode)
             {

@@ -28,7 +28,7 @@ namespace MISP
                 case NodeTypes.MemberAccess:
                     r.AddRange(Compile(node.Children[0], coreFunctions));
                     r.AddRange(Compile(node.Children[1], coreFunctions));
-                    r.AddInstruction("MEMBER_LOOKUP POP POP PUSH");
+                    r.AddInstruction("LOOKUP_MEMBER POP POP PUSH");
                     //TODO: And evaluate
                     break;
                 case NodeTypes.Node:

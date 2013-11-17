@@ -21,7 +21,9 @@ namespace MISP
 
         MOVE,           // SOURCE       DESTINATION     UNUSED
         LOOKUP,         // NAME         DESTINATION     UNUSED
-        MEMBER_LOOKUP,  // NAME         OBJECT          DESTINATION
+        LOOKUP_MEMBER,  // NAME         OBJECT          DESTINATION
+        SET_MEMBER,     // VALUE        NAME            OBJECT
+        RECORD,         // DESTINATION  UNUSED          UNUSED      --Create an empty record and store in DESTINATION.
 
         BEGIN_LOOP,     // DESTINATION  UNUSED          UNUSED      --Places the current execution point in DESTINATION.
         BREAK,          // SOURCE       UNUSED          UNUSED      --Moves execution to the point in SOURCE, skipping 1 instruction.

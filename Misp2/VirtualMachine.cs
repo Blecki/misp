@@ -57,7 +57,7 @@ namespace MISP
                         SetOperand(ins.SecondOperand, value, context);
                     }
                     break;
-                case InstructionSet.MEMBER_LOOKUP:
+                case InstructionSet.LOOKUP_MEMBER:
                     {
                         var memberName = GetOperand(ins.FirstOperand, context).ToString();
                         var obj = GetOperand(ins.SecondOperand, context);
@@ -96,6 +96,41 @@ namespace MISP
 
                         SetOperand(ins.ThirdOperand, value, context);
                     }
+                    break;
+
+                case InstructionSet.SET_MEMBER:
+                    {
+                        var value = GetOperand(ins.FirstOperand, context);
+                        var memberName = GetOperand(ins.SecondOperand, context).ToString();
+                        var obj = GetOperand(ins.ThirdOperand, context);
+
+
+                        if (obj == null)
+                        {
+                            Throw(new InvalidOperationException("Could not set members of NULL."), context);
+                            break;
+                        }
+
+                        if (obj is ScriptObject) //Special handling of script objects.
+                        {
+                            var scriptObject = obj as ScriptObject;
+                            scriptObject.SetProperty(memberName, value);
+                        }
+                        else
+                        {
+                            var lookupResult = SetMemberWithReflection(obj, memberName, value);
+                            if (lookupResult.FoundMember == false)
+                            {
+                                Throw(new InvalidOperationException("Could not find settable member " + memberName + " on type " +
+                                    obj.GetType().Name + "."), context);
+                                break;
+                            }
+                        }
+                    }
+                    break;
+
+                case InstructionSet.RECORD:
+                    SetOperand(ins.FirstOperand, new ScriptObject(), context);
                     break;
 #endregion
 
@@ -406,6 +441,29 @@ namespace MISP
                 memberName);
             if (methods.Length != 0)
                 return MemberLookupResult.Success(new OverloadedReflectionFunction(obj, memberName));
+
+            return MemberLookupResult.Failure;
+        }
+
+        public static MemberLookupResult SetMemberWithReflection(Object obj, String memberName, Object value)
+        {
+            System.Diagnostics.Debug.Assert(obj != null);
+
+            var type = obj.GetType();
+
+            var field = type.GetField(memberName);
+            if (field != null)
+            {
+                field.SetValue(obj, value);
+                return MemberLookupResult.Success(value);
+            }
+
+            var property = type.GetProperty(memberName);
+            if (property != null)
+            {
+                property.SetValue(obj, value, null);
+                return MemberLookupResult.Success(value);
+            }
 
             return MemberLookupResult.Failure;
         }

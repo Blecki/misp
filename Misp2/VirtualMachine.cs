@@ -182,7 +182,7 @@ namespace MISP
 
                 #endregion
 
-                #region Lambdas
+#region Lambdas
                 case InstructionSet.INVOKE:
                     {
                         var arguments = GetOperand(ins.FirstOperand, context) as List<Object>;
@@ -332,7 +332,7 @@ namespace MISP
 
 #endregion
 
-                #region Error Handling
+#region Error Handling
                 case InstructionSet.CATCH:
                     {
                         var returnPoint = new CodeContext(context.CodeContext.Code, context.CodeContext.InstructionPointer - 1);
@@ -350,7 +350,43 @@ namespace MISP
                         Throw(errorObject, context);
                     }
                     break;
-                #endregion
+#endregion
+
+#region Maths
+                case InstructionSet.ADD:
+                    {
+                        dynamic first = GetOperand(ins.FirstOperand, context);
+                        dynamic second = GetOperand(ins.SecondOperand, context);
+                        var result = first + second;
+                        SetOperand(ins.ThirdOperand, result, context);
+                    }
+                    break;
+                case InstructionSet.SUBTRACT:
+                    {
+                        dynamic first = GetOperand(ins.FirstOperand, context);
+                        dynamic second = GetOperand(ins.SecondOperand, context);
+                        var result = second - first;
+                        SetOperand(ins.ThirdOperand, result, context);
+                    }
+                    break;
+                case InstructionSet.MULTIPLY:
+                    {
+                        dynamic first = GetOperand(ins.FirstOperand, context);
+                        dynamic second = GetOperand(ins.SecondOperand, context);
+                        var result = first * second;
+                        SetOperand(ins.ThirdOperand, result, context);
+                    }
+                    break;
+                case InstructionSet.DIVIDE:
+                    {
+                        dynamic first = GetOperand(ins.FirstOperand, context);
+                        dynamic second = GetOperand(ins.SecondOperand, context);
+                        var result = first / second;
+                        SetOperand(ins.ThirdOperand, result, context);
+                    }
+                    break;
+
+#endregion
 
                 default:
                     throw new NotImplementedException();
@@ -362,6 +398,13 @@ namespace MISP
         {
             while (true)
             {
+                if (context.Stack.Count == 0)
+                {
+                    context.ExecutionState = ExecutionState.Error;
+                    context.ErrorMessage = "Unhandled exception: " + errorObject;
+                    break;
+                }
+
                 var topOfStack = context.Stack.Pop();
                 if (topOfStack is ErrorHandler)
                 {

@@ -9,7 +9,7 @@ namespace MISP
     {
         public static void DumpCompiledCode(Context context, System.IO.TextWriter to)
         {
-            DumpOpcode(context.CodeContext.Code, to, 0);
+            DumpOpcode(context.OriginalCodeContext.Code, to, 0);
         }
 
         private static void DumpOpcode(List<Object> opcode, System.IO.TextWriter to, int indent)

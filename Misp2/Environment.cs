@@ -37,6 +37,7 @@ namespace MISP
             MISP.StandardLibrary.SetFunction(this);
             MISP.StandardLibrary.RecordFunction(this);
             MISP.StandardLibrary.ImperativeFunctions(this);
+            MISP.StandardLibrary.MathFunctions(this);
         }
        
         public Context CompileScript(String Script)
@@ -46,7 +47,17 @@ namespace MISP
             return new Context(new CodeContext(compiledScript, 0), this);
         }
 
-
+        public Object RunScript(String Script)
+        {
+            var context = CompileScript(Script);
+            while (context.ExecutionState == ExecutionState.Running)
+                VirtualMachine.Execute(context);
+            if (context.ExecutionState == ExecutionState.Error)
+                throw new InvalidOperationException(context.ErrorMessage);
+            if (context.ExecutionState == ExecutionState.Blocked)
+                throw new InvalidOperationException("Script blocked while quick-running.");
+            return context.Peek;
+        }
 
     }
 }

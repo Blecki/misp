@@ -9,18 +9,10 @@ namespace MISP
     [TestFixture]
     public class Compilation
     {
-        private Environment Environment;
-
-        [SetUp]
-        public void Setup()
-        {
-            Environment = new Environment();
-            Environment.SetupStandardEnvironment();
-        }
-
         [Test]
         public void environment_compiles_trivial_script()
         {
+            var Environment = TestHelper.CreateEnvironment();
             var context = Environment.CompileScript("(foo)");
             Assert.AreNotEqual(null, context);
         }
@@ -28,6 +20,7 @@ namespace MISP
         [Test]
         public void core_functions_expanded()
         {
+            var Environment = TestHelper.CreateEnvironment();
             bool coreFunctionExpanded = false;
             Environment.AddCoreFunction("frobnicate", "", new List<ArgumentDescriptor>(), (node, set) =>
             {

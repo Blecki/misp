@@ -54,6 +54,7 @@
     <Compile Include="InstructionList.cs" />
     <Compile Include="CoreFunctionSet.cs" />
     <Compile Include="Instruction.cs" />
+    <Compile Include="StandardLibrary\Math.cs" />
     <Compile Include="StandardLibrary\Imperative.cs" />
     <Compile Include="StandardLibrary\Record.cs" />
     <Compile Include="StandardLibrary\Set.cs" />

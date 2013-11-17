@@ -57,5 +57,10 @@ namespace MISP
 
         THROW,
         CATCH,
+
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE,
     }
 }

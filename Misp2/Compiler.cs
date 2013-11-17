@@ -27,7 +27,10 @@ namespace MISP
                     break;
                 case NodeTypes.MemberAccess:
                     r.AddRange(Compile(node.Children[0], coreFunctions));
-                    r.AddRange(Compile(node.Children[1], coreFunctions));
+                    if (node.Children[1].Type == NodeTypes.Token)
+                        r.AddInstruction("MOVE NEXT PUSH", node.Children[1].Token);
+                    else
+                        r.AddRange(Compile(node.Children[1], coreFunctions));
                     r.AddInstruction("LOOKUP_MEMBER POP POP PUSH");
                     //TODO: And evaluate
                     break;

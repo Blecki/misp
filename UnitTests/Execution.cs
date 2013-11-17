@@ -9,27 +9,18 @@ namespace MISP
     [TestFixture]
     public class Execution
     {
-        private Environment Environment;
-
-        [SetUp]
-        public void Setup()
-        {
-            Environment = new Environment();
-            Environment.SetupStandardEnvironment();
-        }
-
         [Test]
         public void executes_trivial_script()
         {
+            var Environment = TestHelper.CreateEnvironment();
             var context = Environment.CompileScript("0");
-            while (context.ExecutionState == ExecutionState.Running)
-                VirtualMachine.Execute(context);
-            Assert.AreEqual(ExecutionState.Finished, context.ExecutionState);
+            TestHelper.RunUntilFinished(context);
         }
 
         [Test]
         public void calls_native_function()
         {
+            var Environment = TestHelper.CreateEnvironment();
             bool nativeFunctionCalled = false;
             Environment.QuickBind("native", (_context, arguments) =>
                 {
@@ -37,10 +28,8 @@ namespace MISP
                     return 0;
                 });
             var context = Environment.CompileScript("(native)");
-            while (context.ExecutionState == ExecutionState.Running)
-                VirtualMachine.Execute(context);
+            TestHelper.RunUntilFinished(context);
             Assert.AreEqual(true, nativeFunctionCalled);
-            Assert.AreEqual(ExecutionState.Finished, context.ExecutionState);
         }
     }
 

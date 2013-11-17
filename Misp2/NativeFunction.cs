@@ -31,10 +31,17 @@ namespace MISP
 
         public override InvokationResult Invoke(Context context, List<Object> arguments)
         {
-            var result = NativeImplementation.Invoke(context, arguments.GetRange(1, arguments.Count - 1));
-            VirtualMachine.SetOperand(Operand.PUSH, result, context);
-
-            return InvokationResult.Success;
+            try
+            {
+                var result = NativeImplementation.Invoke(context, arguments.GetRange(1, arguments.Count - 1));
+                if (result == null) return InvokationResult.Failure("Native function returned null.");
+                VirtualMachine.SetOperand(Operand.PUSH, result, context);
+                return InvokationResult.Success;
+            }
+            catch (Exception e)
+            {
+                return InvokationResult.Failure(e.Message);
+            }
         }
     }
 }

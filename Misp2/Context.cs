@@ -21,7 +21,8 @@ namespace MISP
     {
         Running,
         Finished,
-        Blocked
+        Blocked,
+        Error
     }
 
     public class Context
@@ -32,6 +33,7 @@ namespace MISP
         internal CodeContext OriginalCodeContext;
         internal Environment Environment;
         public ExecutionState ExecutionState { get; internal set; }
+        public String ErrorMessage = "";
 
         public Object Peek { get { return Stack.Peek(); } }
 

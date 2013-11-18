@@ -7,8 +7,6 @@ namespace MISP
 {
     public class Environment
     {
-        //TODO: Round robin threaded execution of scripts.
-
         internal CompileContext CoreFunctions = new CompileContext();
         internal NativeFunctionSet NativeFunctions = new NativeFunctionSet();
 
@@ -44,6 +42,7 @@ namespace MISP
             MISP.StandardLibrary.ImperativeFunctions(this);
             MISP.StandardLibrary.MathFunctions(this);
             MISP.StandardLibrary.BooleanBranching(this);
+            MISP.StandardLibrary.WhileFunction(this);
         }
        
         public ExecutionContext CompileScript(String Script)
@@ -56,6 +55,11 @@ namespace MISP
         public Object RunScript(String Script)
         {
             var context = CompileScript(Script);
+            return RunScript(context);
+        }
+
+        public Object RunScript(ExecutionContext context)
+        {
             while (context.ExecutionState == ExecutionState.Running)
                 VirtualMachine.Execute(context);
             if (context.ExecutionState == ExecutionState.Error)

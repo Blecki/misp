@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="Compilation.cs" />
     <Compile Include="Branching.cs" />
+    <Compile Include="Looping.cs" />
+    <Compile Include="ThreadPool.cs" />
     <Compile Include="Imperative.cs" />
     <Compile Include="Math.cs" />
     <Compile Include="Records.cs" />

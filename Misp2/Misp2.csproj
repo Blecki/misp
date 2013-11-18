@@ -55,6 +55,8 @@
     <Compile Include="InstructionList.cs" />
     <Compile Include="CompileContext.cs" />
     <Compile Include="Instruction.cs" />
+    <Compile Include="StandardLibrary\While.cs" />
+    <Compile Include="ThreadPool.cs" />
     <Compile Include="StandardLibrary\BooleanBranching.cs" />
     <Compile Include="StandardLibrary\Math.cs" />
     <Compile Include="StandardLibrary\Imperative.cs" />

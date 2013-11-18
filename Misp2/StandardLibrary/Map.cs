@@ -19,32 +19,33 @@ namespace MISP
                 {
                     return new InstructionList(
                         new InPlace(Compiler.Compile(node.Children[2], functions)),
-                        "PUSH_VARIABLE PEEK NEXT", "__list",
-                        "LENGTH POP PUSH",
-                        "PUSH_VARIABLE POP NEXT", "__counter",
-                        "EMPTY_LIST PUSH",
-                        "PUSH_VARIABLE POP NEXT", "__result",
-                        "MARK PUSH",
-                            "LOOKUP NEXT PUSH", "__counter",
-                            "DECREMENT POP PUSH",
-                            "SET_VARIABLE PEEK NEXT", "__counter",
-                            "LESS POP NEXT PUSH", 0,
-                            "IF_TRUE POP",
-                                "BRANCH PUSH NEXT",
+                        "PUSH_VARIABLE PEEK NEXT", "__list", //Store the list of items in scope             [L]
+                        "LENGTH POP PUSH",                                                                //[L*]
+                        "PUSH_VARIABLE POP NEXT", "__counter", //Counter counts backwards                   []
+                        "EMPTY_LIST PUSH",                                                                //[R]
+                        "PUSH_VARIABLE POP NEXT", "__result",                                             //[]
+                        "BRANCH PUSH NEXT",       //LOOP BRANCH                                           //[M]
+                            new InstructionList(
+                                "LOOKUP NEXT PUSH", "__counter", //Reduce the counter by one.             //[M C]
+                                "DECREMENT POP PUSH",
+                                "SET_VARIABLE PEEK NEXT", "__counter",  
+                                "LESS POP NEXT PUSH", 0,                                                  //[M B]
+                                "IF_TRUE POP",  //If counter is 0, stop looping.                          //[M]
+                                "BRANCH PUSH NEXT",                                                       //[M M]
                                     new InstructionList(
-                                        "CLEANUP NEXT", 1,
-                                        "BREAK POP"),
-                            "LOOKUP NEXT PUSH", "__list",
-                            "LOOKUP NEXT PUSH", "__counter",
-                            "INDEX POP POP PUSH",
-                            "PUSH_VARIABLE POP NEXT", node.Children[1].Token,
-                            "LOOKUP NEXT PUSH", "__result",
-                            new InPlace(Compiler.Compile(node.Children[3], functions)),
-                            "PREPEND POP POP PUSH",
-                            "SET_VARIABLE POP NEXT", "__result",
-                            "POP_VARIABLE NEXT", node.Children[1].Token,
-                            "CONTINUE POP",
-                        "LOOKUP NEXT PUSH", "__result",
+                                        "MOVE POP NONE",    //Remove inner most MARK from stack           //[M]
+                                        "BREAK POP"),       //Break to LOOP BRANCH                        //[]
+                                "LOOKUP NEXT PUSH", "__list",                                             //[M L]
+                                "LOOKUP NEXT PUSH", "__counter",                                          //[M L C]
+                                "INDEX POP POP PUSH",                                                     //[M O]
+                                "PUSH_VARIABLE POP NEXT", node.Children[1].Token,                         //[M]
+                                "LOOKUP NEXT PUSH", "__result",                                           //[M R]
+                                new InPlace(Compiler.Compile(node.Children[3], functions)),               //[M R O]
+                                "PREPEND POP POP PUSH",                                                   //[M R]
+                                "SET_VARIABLE POP NEXT", "__result",                                      //[M]
+                                "POP_VARIABLE NEXT", node.Children[1].Token,                              
+                                "CONTINUE POP"),                                                          //[]
+                        "LOOKUP NEXT PUSH", "__result",                                                   //[R]
                         "POP_VARIABLE NEXT", "__result",
                         "POP_VARIABLE NEXT", "__counter",
                         "POP_VARIABLE NEXT", "__list"

@@ -34,5 +34,15 @@ namespace MISP
             Console.WriteLine("");
             Assert.AreEqual(expectedResult, context.Peek);
         }
+
+        public static Object RunSimpleTest(String script)
+        {
+            Console.WriteLine("Test script: " + script);
+            var Environment = TestHelper.CreateEnvironment();
+            var context = Environment.CompileScript(script);
+            TestHelper.RunUntilFinished(context);
+            Console.WriteLine("");
+            return context.Peek;
+        }
     }
 }

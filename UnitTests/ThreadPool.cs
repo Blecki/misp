@@ -84,6 +84,8 @@ namespace MISP
             var maximumFrequency = runFrequency.Max((kvp) => { return kvp.Value; });
             Assert.AreEqual(true, runFrequency.ContainsKey(highPriority));
             Assert.AreEqual(maximumFrequency, runFrequency[highPriority]);
+            Assert.AreEqual(Contexes.Count, runFrequency.Count);
+            Assert.AreEqual(false, runFrequency.ContainsValue(0));
         }
     }
 

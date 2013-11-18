@@ -23,7 +23,18 @@ namespace MISP
             Assert.IsNotNull(result);
             Assert.IsTrue(result.CapturedScope.HasVariable("foo"));
             Assert.AreEqual(9, result.CapturedScope.GetVariable("foo"));
-        }        
+        }
+
+        [Test]
+        public void lambda_can_be_called()
+        {
+            TestHelper.RunSimpleTest(@"
+                (
+                    (let ((foo 9)) 
+                        (lambda (x) (* x foo))
+                    ) 
+                2)", 18);
+        }     
     }
 
 }

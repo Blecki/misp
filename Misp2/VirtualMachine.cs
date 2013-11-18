@@ -465,6 +465,12 @@ namespace MISP
 
         public static void Skip(ExecutionContext context)
         {
+            if (context.CodeContext.InstructionPointer >= context.CodeContext.Code.Count)
+            {
+                context.ExecutionState = ExecutionState.Finished;
+                return;
+            }
+
             var nextInstruction = context.CodeContext.Code[context.CodeContext.InstructionPointer] as Instruction?;
             context.CodeContext.InstructionPointer += 1;
             if (!nextInstruction.HasValue) throw new InvalidOperationException("Encountered non-code in instruction stream");

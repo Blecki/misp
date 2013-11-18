@@ -19,7 +19,7 @@ namespace MISP
             Console.WriteLine("Test script: " + script);
             var Environment = TestHelper.CreateEnvironment();
             Console.WriteLine(loops);
-            Environment.QuickBind("while-test", (_context, arguments) =>
+            Environment.AddNativeFunction("while-test", (_context, arguments) =>
                 {
                     Console.WriteLine(loops);
                     ++loops;

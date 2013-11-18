@@ -18,7 +18,7 @@ namespace MISP
         public void Setup()
         {
             Environment = TestHelper.CreateEnvironment();
-            Environment.QuickBind("test", (context, arguments) =>
+            Environment.AddNativeFunction("test", (context, arguments) =>
                 {
                     ThreadCallback(context);
                     return 0;

@@ -7,8 +7,8 @@ namespace MISP
 {
     public class Environment
     {
-        internal CompileContext CoreFunctions = new CompileContext();
-        internal NativeFunctionSet NativeFunctions = new NativeFunctionSet();
+        internal CompileContext CompileContext = new CompileContext();
+        internal RuntimeContext RuntimeContext = new RuntimeContext();
 
         public void AddCoreFunction(
             String Name, 
@@ -16,19 +16,27 @@ namespace MISP
             List<ArgumentDescriptor> Arguments, 
             Func<ParseNode, CompileContext, InstructionList> Emit)
         {
-            CoreFunctions.CoreFunctions.Upsert(Name, new CoreFunction(Name, HelpText, Arguments, Emit));
+            CompileContext.CoreFunctions.Upsert(Name, new CoreFunction(Name, HelpText, Arguments, Emit));
         }
 
         public void AddCompileTimeConstant(String Name, Object Value)
         {
-            CoreFunctions.CompileTimeConstants.Upsert(Name, new CompileTimeConstant(Name, Value));
+            CompileContext.CompileTimeConstants.Upsert(Name, new CompileTimeConstant(Name, Value));
         }
 
-        public void QuickBind(
-            String Name,
-            Func<ExecutionContext, List<Object>, Object> Implementation)
+        public void AddNativeFunction(String Name, Func<ExecutionContext, List<Object>, Object> Implementation)
         {
-            NativeFunctions.Upsert(Name, new NativeFunction(Implementation));
+            RuntimeContext.NativeFunctions.Upsert(Name, new NativeFunction(Implementation));
+        }
+
+        public void AddNativeFunction(String Name, NativeFunction Function)
+        {
+            RuntimeContext.NativeFunctions.Upsert(Name, Function);
+        }
+
+        public void AddNativeSpecial(String Name, Func<Object> Fetch)
+        {
+            RuntimeContext.NativeSpecials.Upsert(Name, Fetch);
         }
 
         public void SetupStandardEnvironment()
@@ -48,7 +56,7 @@ namespace MISP
         public ExecutionContext CompileScript(String Script)
         {
             var parsedScript = Parser.ParseRoot(Script, "");
-            var compiledScript = Compiler.Compile(parsedScript, CoreFunctions);
+            var compiledScript = Compiler.Compile(parsedScript, CompileContext);
             return new ExecutionContext(new CodeContext(compiledScript, 0), this);
         }
 

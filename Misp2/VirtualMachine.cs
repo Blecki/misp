@@ -47,8 +47,10 @@ namespace MISP
                         Object value = null;
                         if (context.Scope.HasVariable(name))
                             value = context.Scope.GetVariable(name);
-                        else if (context.Environment.NativeFunctions.ContainsKey(name))
-                            value = context.Environment.NativeFunctions[name];
+                        else if (context.Environment.RuntimeContext.NativeFunctions.ContainsKey(name))
+                            value = context.Environment.RuntimeContext.NativeFunctions[name];
+                        else if (context.Environment.RuntimeContext.NativeSpecials.ContainsKey(name))
+                            value = context.Environment.RuntimeContext.NativeSpecials[name]();
                         else
                         {
                             Throw(new InvalidOperationException("Could not resolve name '" + name + "'."), context);

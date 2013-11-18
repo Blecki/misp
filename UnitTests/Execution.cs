@@ -22,7 +22,7 @@ namespace MISP
         {
             var Environment = TestHelper.CreateEnvironment();
             bool nativeFunctionCalled = false;
-            Environment.QuickBind("native", (_context, arguments) =>
+            Environment.AddNativeFunction("native", (_context, arguments) =>
                 {
                     nativeFunctionCalled = true;
                     return 0;

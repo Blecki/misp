@@ -8,7 +8,7 @@ namespace MISP
     public class Scope
     {
         internal Scope parentScope = null;
-        internal Dictionary<String, ScriptList> variables = new Dictionary<String, ScriptList>();
+        internal Dictionary<String, List<Object>> variables = new Dictionary<String, List<Object>>();
 
         public bool HasVariable(String name)
         {
@@ -17,7 +17,7 @@ namespace MISP
 
         public void PushVariable(String name, Object value)
         {
-            if (!HasVariable(name)) variables.Add(name, new ScriptList());
+            if (!HasVariable(name)) variables.Add(name, new List<Object>());
             variables[name].Add(value);
         }
 

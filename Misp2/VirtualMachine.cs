@@ -320,9 +320,10 @@ namespace MISP
                     break;
                 case InstructionSet.LESS:
                     {
-                        var v0 = GetOperand(ins.FirstOperand, context) as int?;
-                        var v1 = GetOperand(ins.SecondOperand, context) as int?;
-                        SetOperand(ins.ThirdOperand, v0.Value < v1.Value, context);
+                        dynamic v0 = GetOperand(ins.FirstOperand, context);
+                        dynamic v1 = GetOperand(ins.SecondOperand, context);
+                        var result = v0 < v1;
+                        SetOperand(ins.ThirdOperand, result, context);
                     }
                     break;
                 case InstructionSet.IF_TRUE:

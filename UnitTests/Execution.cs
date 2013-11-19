@@ -31,6 +31,21 @@ namespace MISP
             TestHelper.RunUntilFinished(context);
             Assert.AreEqual(true, nativeFunctionCalled);
         }
+
+        [Test]
+        public void specials_called()
+        {
+            var Environment = TestHelper.CreateEnvironment();
+            bool specialCalled = false;
+            Environment.AddNativeSpecial("native", () =>
+            {
+                specialCalled = true;
+                return 5;
+            });
+            var context = Environment.CompileScript("native");
+            TestHelper.RunUntilFinished(context);
+            Assert.AreEqual(true, specialCalled);
+        }
     }
 
 }

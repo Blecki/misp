@@ -96,12 +96,11 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MISP\MISP.csproj">
-      <Project>{BA7D4BAE-B4B5-40BC-8E73-6743E260F7BC}</Project>
-      <Name>MISP</Name>
+    <ProjectReference Include="..\Misp2\Misp2.csproj">
+      <Project>{0BB6E197-5933-4A5A-992A-BFFD526899DB}</Project>
+      <Name>Misp2</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

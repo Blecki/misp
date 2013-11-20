@@ -50,7 +50,14 @@ namespace MISP
                                 r.AddInstruction("APPEND POP PEEK");
                         }
                     }
-                        //Todo: Implement AsLiteral prefix
+                    else if (node.Prefix == Prefixes.AsLiteral)
+                    {
+                        node.Prefix = Prefixes.None;
+                        r.AddInstruction(
+                            "MOVE NEXT PUSH",
+                            Compile(node, coreFunctions));
+                        node.Prefix = Prefixes.AsLiteral;
+                    }
                     else
                     {
                         if (node.Children.Count == 0) break;

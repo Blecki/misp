@@ -46,7 +46,7 @@ namespace MISP
             ExecutionState = MISP.ExecutionState.Running;
         }
 
-        internal ExecutionContext(CodeContext start, Environment Environment)
+        public ExecutionContext(CodeContext start, Environment Environment)
         {
             this.OriginalCodeContext = start;
             this.Environment = Environment;

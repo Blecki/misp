@@ -34,13 +34,13 @@ namespace MISP
             try
             {
                 var result = NativeImplementation.Invoke(context, arguments.GetRange(1, arguments.Count - 1));
-                if (result == null) return InvokationResult.Failure("Native function returned null.");
+                if (result == null) return InvokationResult.Failure(String.Format("Native function {0} returned null.", Name));
                 VirtualMachine.SetOperand(Operand.PUSH, result, context);
                 return InvokationResult.Success;
             }
             catch (Exception e)
             {
-                return InvokationResult.Failure(e.Message);
+                return InvokationResult.Failure(e.Message + e.StackTrace);
             }
         }
     }

@@ -65,5 +65,7 @@ namespace MISP
         SUBTRACT,
         MULTIPLY,
         DIVIDE,
+
+        DEBUG,
     }
 }

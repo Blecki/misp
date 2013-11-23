@@ -412,6 +412,9 @@ namespace MISP
 
 #endregion
 
+                case InstructionSet.DEBUG:
+                    Console.WriteLine(GetOperand(ins.FirstOperand, context));
+                    break;
                 default:
                     throw new NotImplementedException();
             }

@@ -46,6 +46,19 @@ namespace MISP
             TestHelper.RunUntilFinished(context);
             Assert.AreEqual(true, specialCalled);
         }
+
+        [Test]
+        public void str_format()
+        {
+            var Environment = TestHelper.CreateEnvironment();
+            Environment.AddNativeFunction("str_format", (_context, arguments) =>
+                {
+                    return String.Format(arguments[0].ToString(), arguments.GetRange(1, arguments.Count - 1).ToArray());
+                });
+            var context = Environment.CompileScript("(str_format \"{0}\" 42)");
+            TestHelper.RunUntilFinished(context);
+            Assert.AreEqual("42", context.Peek);
+        }
     }
 
 }

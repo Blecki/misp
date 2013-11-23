@@ -27,6 +27,7 @@ namespace MISP
         public void AddNativeFunction(String Name, Func<ExecutionContext, List<Object>, Object> Implementation)
         {
             RuntimeContext.NativeFunctions.Upsert(Name, new NativeFunction(Implementation));
+            RuntimeContext.NativeFunctions[Name].Name = Name;
         }
 
         public void AddNativeFunction(String Name, NativeFunction Function)
@@ -51,6 +52,14 @@ namespace MISP
             MISP.StandardLibrary.MathFunctions(this);
             MISP.StandardLibrary.BooleanBranching(this);
             MISP.StandardLibrary.WhileFunction(this);
+            MISP.StandardLibrary.ForFunction(this);
+        }
+
+        public static Environment CreateStandardEnvironment()
+        {
+            var r = new Environment();
+            r.SetupStandardEnvironment();
+            return r;
         }
        
         public ExecutionContext CompileScript(String Script)

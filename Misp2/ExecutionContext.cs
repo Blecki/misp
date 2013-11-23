@@ -34,6 +34,7 @@ namespace MISP
         internal Environment Environment;
         public ExecutionState ExecutionState { get; internal set; }
         public String ErrorMessage = "";
+        public Object Tag = null;
 
         public Object Peek { get { return Stack.Peek(); } }
 

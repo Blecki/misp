@@ -23,6 +23,18 @@ namespace MISP
                         new InPlace(Compiler.Compile(node.Children[2], functions)),
                         "EQUAL POP POP PUSH");
                 });
+
+            environment.AddCoreFunction(
+                "<",
+                "True if A < B",
+                Arguments("A", "first value", "B", "second value"),
+                (node, functions) =>
+                {
+                    return new InstructionList(
+                        new InPlace(Compiler.Compile(node.Children[2], functions)),
+                        new InPlace(Compiler.Compile(node.Children[1], functions)),
+                        "LESS POP POP PUSH");
+                });
             
             environment.AddCoreFunction(
                 "if",

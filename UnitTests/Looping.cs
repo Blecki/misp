@@ -43,6 +43,22 @@ namespace MISP
             for (int i = 0; i < 5; ++i)
                 Assert.AreEqual(i * i, result[i]);
         }
+
+        [Test]
+        public void _for()
+        {
+            var Environment = TestHelper.CreateEnvironment();
+            var context = Environment.CompileScript("(for x 0 (< x 5) (+ 1 x) x)");
+            TestHelper.RunUntilFinished(context);
+            Assert.IsInstanceOf(typeof(List<Object>), context.Peek);
+            var result = context.Peek as List<Object>;
+            Console.WriteLine(result.Count);
+            foreach (var v in result)
+                Console.WriteLine(v);
+            for (int i = 0; i < 5; ++i)
+                Assert.AreEqual(i, result[i]);
+
+        }
     }
 
 }

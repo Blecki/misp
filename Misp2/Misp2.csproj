@@ -43,6 +43,8 @@
     <Compile Include="ArgumentDescriptor.cs" />
     <Compile Include="AutoBind.cs" />
     <Compile Include="CompileTimeConstant.cs" />
+    <Compile Include="StandardLibrary\For.cs" />
+    <Compile Include="StaticOverloadedReflectionFunction.cs" />
     <Compile Include="OverloadedReflectionFunction.cs" />
     <Compile Include="RuntimeContext.cs" />
     <Compile Include="Debug.cs" />

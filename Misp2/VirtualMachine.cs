@@ -281,6 +281,7 @@ namespace MISP
                     {
                         var i = GetOperand(ins.FirstOperand, context) as int?;
                         var l = GetOperand(ins.SecondOperand, context) as List<Object>;
+                        Console.WriteLine(i.ToString() + " " + l.Count.ToString());
                         SetOperand(ins.ThirdOperand, l[i.Value], context);
                     }
                     break;
@@ -318,11 +319,25 @@ namespace MISP
                         SetOperand(ins.SecondOperand, v.Value - 1, context);
                     }
                     break;
+                case InstructionSet.INCREMENT:
+                    {
+                        var v = GetOperand(ins.FirstOperand, context) as int?;
+                        SetOperand(ins.SecondOperand, v.Value + 1, context);
+                    }
+                    break;
                 case InstructionSet.LESS:
                     {
                         dynamic v0 = GetOperand(ins.FirstOperand, context);
                         dynamic v1 = GetOperand(ins.SecondOperand, context);
                         var result = v0 < v1;
+                        SetOperand(ins.ThirdOperand, result, context);
+                    }
+                    break;
+                case InstructionSet.GREATER_EQUAL:
+                    {
+                        dynamic v0 = GetOperand(ins.FirstOperand, context);
+                        dynamic v1 = GetOperand(ins.SecondOperand, context);
+                        var result = v0 >= v1;
                         SetOperand(ins.ThirdOperand, result, context);
                     }
                     break;

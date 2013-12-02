@@ -32,7 +32,7 @@ namespace MISP
         internal CodeContext CodeContext;
         internal CodeContext OriginalCodeContext;
         internal Environment Environment;
-        public ExecutionState ExecutionState { get; internal set; }
+        public ExecutionState ExecutionState { get; set; }
         public String ErrorMessage = "";
         public Object Tag = null;
 

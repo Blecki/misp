@@ -21,15 +21,15 @@ namespace MISP
                         new InPlace(Compiler.Compile(node.Children[2], functions)),
                         "PUSH_VARIABLE PEEK NEXT", "__list", //Store the list of items in scope             [L]
                         "LENGTH POP PUSH",                                                                //[L*]
-                        "PUSH_VARIABLE POP NEXT", "__counter", //Counter counts backwards                   []
+                        "PUSH_VARIABLE POP NEXT", "__total", //Total elements in list                      []
+                        "PUSH_VARIABLE NEXT NEXT", 0, "__counter", 
                         "EMPTY_LIST PUSH",                                                                //[R]
                         "PUSH_VARIABLE POP NEXT", "__result",                                             //[]
                         "BRANCH PUSH NEXT",       //LOOP BRANCH                                           //[M]
                             new InstructionList(
-                                "LOOKUP NEXT PUSH", "__counter", //Reduce the counter by one.             //[M C]
-                                "DECREMENT POP PUSH",
-                                "SET_VARIABLE PEEK NEXT", "__counter",  
-                                "LESS POP NEXT PUSH", 0,                                                  //[M B]
+                                "LOOKUP NEXT PUSH", "__total",
+                                "LOOKUP NEXT PUSH", "__counter",                                          //[M C]
+                                "GREATER_EQUAL POP POP PUSH",                                             //[M B]
                                 "IF_TRUE POP",  //If counter is 0, stop looping.                          //[M]
                                 "BRANCH PUSH NEXT",                                                       //[M M]
                                     new InstructionList(
@@ -41,14 +41,18 @@ namespace MISP
                                 "PUSH_VARIABLE POP NEXT", node.Children[1].Token,                         //[M]
                                 "LOOKUP NEXT PUSH", "__result",                                           //[M R]
                                 new InPlace(Compiler.Compile(node.Children[3], functions)),               //[M R O]
-                                "PREPEND POP POP PUSH",                                                   //[M R]
+                                "APPEND POP POP PUSH",                                                   //[M R]
                                 "SET_VARIABLE POP NEXT", "__result",                                      //[M]
-                                "POP_VARIABLE NEXT", node.Children[1].Token,                              
+                                "POP_VARIABLE NEXT", node.Children[1].Token,                        
+                                "LOOKUP NEXT PUSH", "__counter", //Increment the counter
+                                "INCREMENT POP PUSH",
+                                "SET_VARIABLE POP NEXT", "__counter",
                                 "CONTINUE POP"),                                                          //[]
                         "LOOKUP NEXT PUSH", "__result",                                                   //[R]
                         "POP_VARIABLE NEXT", "__result",
                         "POP_VARIABLE NEXT", "__counter",
-                        "POP_VARIABLE NEXT", "__list"
+                        "POP_VARIABLE NEXT", "__list",
+                        "POP_VARIABLE NEXT", "__total"
                         );
                 });
         }

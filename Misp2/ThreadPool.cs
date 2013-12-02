@@ -34,7 +34,7 @@ namespace MISP
 
     public class ThreadPool
     {
-        private List<Thread> RunningScripts = new List<Thread>();
+        public List<Thread> RunningScripts = new List<Thread>();
 
         public int ScriptCount { get { return RunningScripts.Count; } }
         public int CyclesAvailable { get; set; }
@@ -90,5 +90,24 @@ namespace MISP
                 cyclesUsed += 1;
             }
         }
+
+        public void ExecuteEachUntilBlock()
+        {
+            if (RunningScripts.Count == 0) return;
+
+            for (var i = 0; i < RunningScripts.Count; )
+            {
+                var currentThread = RunningScripts[i];
+
+                while (currentThread.Context.ExecutionState == ExecutionState.Running)
+                    VirtualMachine.Execute(currentThread.Context);
+
+                if (currentThread.Context.ExecutionState == ExecutionState.Blocked)
+                    ++i;
+                else
+                    RunningScripts.RemoveAt(i);
+            }
+        }
+
     }
 }

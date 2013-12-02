@@ -48,9 +48,9 @@ namespace MISP
             return obj.ToString();
         }
 
-        public static ParseNode LazyArgument(Object obj)
+        public static InstructionList LazyArgument(Object obj)
         {
-            return obj as ParseNode;
+            return obj as InstructionList;
         }
 
         public static T ClassArgument<T>(Object obj) where T : class

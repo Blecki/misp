@@ -51,7 +51,9 @@ namespace MISP
         POP_VARIABLE,
 
         DECREMENT,
+        INCREMENT,
         LESS,
+        GREATER_EQUAL,
         IF_TRUE,
         IF_FALSE,
         SKIP,

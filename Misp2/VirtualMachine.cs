@@ -199,7 +199,12 @@ namespace MISP
                             }
                         }
                         else
-                            Throw(new InvalidOperationException("Can't invoke what isn't invokeable."), context);
+                        {
+                            if (arguments.Count > 1)
+                                Throw(new InvalidOperationException("If the first argument in a node isn't an invokeable function, there can't be any further arguments."), context);
+                            else 
+                                SetOperand(Operand.PUSH, arguments[0], context);
+                        }
                     }
                     break;
                 case InstructionSet.LAMBDA:
@@ -285,6 +290,20 @@ namespace MISP
                         SetOperand(ins.ThirdOperand, l[i.Value], context);
                     }
                     break;
+#endregion
+
+#region Strings
+                case InstructionSet.EMPTY_STRING:
+                    SetOperand(ins.FirstOperand, "", context);
+                    break;
+                case InstructionSet.APPEND_STRING:
+                    {
+                        var A = GetOperand(ins.FirstOperand, context) ?? "";
+                        var B = GetOperand(ins.SecondOperand, context) ?? "";
+                        SetOperand(ins.ThirdOperand, B.ToString() + A.ToString(), context);
+                    }
+                    break;
+
 #endregion
 
 #region Variables

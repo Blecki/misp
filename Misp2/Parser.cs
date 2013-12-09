@@ -197,7 +197,7 @@ namespace MISP
             var prefix = ParsePrefix(state);
 
             if (state.Next() == '"')
-                result = ParseBasicString(state);
+                result = ParseStringExpression(state);
             else if (state.Next() == '(')
                 result = ParseNode(state);
             else if (state.Next() == '\'')
@@ -259,6 +259,53 @@ namespace MISP
             }
             if (end != null) state.Advance(end.Length);
             return result;
+        }
+
+        public static ParseNode ParseStringExpression(ParseState state)
+        {
+            var result = new ParseNode(NodeTypes.StringExpression);
+            state.Advance();
+
+            var piece = "";
+
+            while (!state.AtEnd())
+            {
+                if (state.Next() == '}' && piece.Length == 0)
+                {
+                    state.Advance(1);
+                }
+                else if (state.Next() == '(')
+                {
+                    if (!String.IsNullOrEmpty(piece))
+                        result.Children.Add(new ParseNode(NodeTypes.String, Prefixes.None, piece));
+                    result.Children.Add(ParseNode(state));
+                    piece = "";
+                }
+                else if (state.Next() == '\\')
+                {
+                    state.Advance(); //skip the slash.
+                    piece += '\\';
+                    piece += state.Next();
+                    state.Advance();
+                }
+                else if (state.Next() == '"') //Found end of string 
+                {
+                    if (!String.IsNullOrEmpty(piece))
+                        result.Children.Add(new ParseNode(NodeTypes.String, Prefixes.None, piece));
+                    state.Advance();
+                    if (result.Children.Count == 1 && result.Children[0].Type == NodeTypes.String)
+                        return result.Children[0];
+                    return result;
+                }
+                else
+                {
+                    piece += state.Next();
+                    state.Advance();
+                }
+            }
+
+            throw new ParseError("Unexpected end of script inside string.", state.currentLine);
+
         }
 
         public static ParseNode ParseBasicString(ParseState state)

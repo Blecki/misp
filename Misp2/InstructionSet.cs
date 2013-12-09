@@ -40,6 +40,9 @@ namespace MISP
         PREPEND,
         PREPEND_RANGE,
 
+        EMPTY_STRING,   // DESTINATION
+        APPEND_STRING,  // A            B               DESTINATION --Place "BA" in DESTINATION
+
         INVOKE,
         LAMBDA,
         PUSH_SCOPE,

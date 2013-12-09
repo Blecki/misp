@@ -81,6 +81,14 @@ namespace MISP
                         r.AddInstruction("INVOKE POP");
                     }
                     break;
+                case NodeTypes.StringExpression:
+                    r.AddInstruction("EMPTY_STRING PUSH");
+                    foreach (var child in node.Children)
+                    {
+                        r.AddRange(Compile(child, coreFunctions));
+                        r.AddInstruction("APPEND_STRING POP POP PUSH");
+                    }
+                    break;
                 default:
                     throw new NotImplementedException();
             }

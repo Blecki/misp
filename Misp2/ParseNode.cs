@@ -12,7 +12,8 @@ namespace MISP
         Token,
         Number,
         Character,
-        String
+        String,
+        StringExpression
     }
 
     public enum Prefixes
@@ -37,6 +38,13 @@ namespace MISP
             this.Type = Type;
             this.Children = new List<ParseNode>();
             this.Prefix = Prefixes.None;
+        }
+
+        public ParseNode(NodeTypes Type, Prefixes Prefix, String Token)
+        {
+            this.Type = Type;
+            this.Prefix = Prefix;
+            this.Token = Token;
         }
     }
 }

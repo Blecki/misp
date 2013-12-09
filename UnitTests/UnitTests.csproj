@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="Compilation.cs" />
     <Compile Include="Branching.cs" />
+    <Compile Include="StringExpressions.cs" />
     <Compile Include="Lambda.cs" />
     <Compile Include="Looping.cs" />
     <Compile Include="ThreadPool.cs" />

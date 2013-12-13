@@ -234,6 +234,7 @@ namespace MISP
                 {
                     prefix = "";
                     result = ParseBasicString(state);
+                    
                 }
                 else
                     result = ParseStringExpression(state);
@@ -333,7 +334,7 @@ namespace MISP
                 }
             }
 
-            throw new ParseError("Unexpected end of script inside string expression.", state.currentLine);
+            throw new ParseError("Unexpected end of script inside string.", state.currentLine);
         }
 
         public static ScriptObject ParseStringExpression(ParseState state, bool isRoot = false)

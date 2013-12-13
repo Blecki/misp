@@ -15,6 +15,13 @@ namespace MISP
             TestHelper.RunSimpleTest("(let ((foo 5)) \"foo: (foo)\")", "foo: 5");
         }
 
+        [Test]
+        public void escaped()
+        {
+            TestHelper.RunSimpleTest("(let ((foo 5)) $\"foo: (foo)\")", "foo: (foo)");
+        }
+
+
     }
 
 }

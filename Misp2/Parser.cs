@@ -197,7 +197,17 @@ namespace MISP
             var prefix = ParsePrefix(state);
 
             if (state.Next() == '"')
-                result = ParseStringExpression(state);
+            {
+                if (prefix == Prefixes.ExpandInPlace)
+                {
+                    prefix = Prefixes.None;
+                    result = ParseBasicString(state);
+                }
+                else
+                {
+                    result = ParseStringExpression(state);
+                }
+            }
             else if (state.Next() == '(')
                 result = ParseNode(state);
             else if (state.Next() == '\'')
